@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -47,22 +46,14 @@ public class Client {
                     }
                 // nel caso del commando "show", invia la richiesta al server e attende del risultato
                 } else if (command.equals("show")) {
-                    /*
-                     * getInputStream e getOutputStream sono i canali di ricezione e invio
-                     * attraverso il socket.
-                     * 
-                     * Gli stream ottenuti sono in byte; usiamo quindi Scanner e PrintWriter per
-                     * facilitare la comunicazione, convertendo tra testo e byte.
-                     * 
-                     * Nel caso di PrintWrite, il flag "true" indica autoflush (i dati vengono
-                     * inviati al server dopo ogni print)
-                     */
-                    Scanner fromServer = new Scanner(socket.getInputStream());
-                    PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
-                    toServer.println("show");
-                    String response = fromServer.nextLine();
-                    System.out.println(response);
-                    fromServer.close();
+                    Thread showtopics = new Thread(new ShowTopics(socket));
+                    showtopics.start();
+                    try {
+                        showtopics.join();
+                    } catch (InterruptedException e) {
+                        //se qualcuno interrompe questo thread nel frattempo, terminiamo
+                        return;
+                    }
                 } else if (command.equals("quit")) {
                     System.out.println("Disconnecting from server...");
                     break;
