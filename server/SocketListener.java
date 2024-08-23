@@ -6,17 +6,18 @@ import java.util.ArrayList;
 
 public class SocketListener implements Runnable {
     ServerSocket server;
+    TopicManager topicManager;
     ArrayList<Thread> children = new ArrayList<>();
 
-    public SocketListener(ServerSocket server) {
+    public SocketListener(ServerSocket server, TopicManager topicManager) {
         this.server = server;
+        this.topicManager = topicManager;
     }
 
     @Override
     public void run() {
         try {
             this.server.setSoTimeout(5000);
-            Resource r = new Resource(); // risorsa condivisa tra tutti i thread dei vari client
 
             while (!Thread.interrupted()) {
                 try {
@@ -30,19 +31,19 @@ public class SocketListener implements Runnable {
                      * SocketTimeoutException, dopo la quale potremo ricontrollare lo stato del
                      * Thread nella condizione del while().
                      */
-                    Socket s = this.server.accept();
+                    Socket socket = this.server.accept();
                     if (!Thread.interrupted()) {
                         System.out.println("Client connected");
 
                         /* crea un nuovo thread per lo specifico socket */
-                        Thread handlerThread = new Thread(new ClientHandler(s, r));
+                        Thread handlerThread = new Thread(new ClientHandler(socket, topicManager));
                         handlerThread.start();
                         this.children.add(handlerThread);
                         /*
                          * una volta creato e avviato il thread, torna in ascolto per il prossimo client
                          */
                     } else {
-                        s.close();
+                        socket.close();
                         break;
                     }
                 } catch (SocketTimeoutException e) {
