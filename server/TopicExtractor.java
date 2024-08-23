@@ -1,4 +1,3 @@
-
 public class TopicExtractor implements Runnable {
 
     @Override
