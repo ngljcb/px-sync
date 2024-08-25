@@ -15,7 +15,9 @@ public class Topic {
         this.counter = 0;
     }
 
-    public synchronized void addMessage(Message message) {
+    public synchronized void addMessage(String text, ClientHandler publisher) {
+        this.counter++;
+        Message message = new Message(this.counter, text, publisher);
         messages.add(message);
         notifySubscribers(message); // Notifica i subscriber del nuovo messaggio
     }
