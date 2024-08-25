@@ -38,7 +38,7 @@ public class Topic {
         Iterator<Message> iterator = this.messages.iterator();
         while (iterator.hasNext()) {
             Message message = iterator.next();
-            if (message.getId() == id) {
+            if (message.getid() == id) {
                 iterator.remove(); // Rimuove il messaggio
                 break;
             }
