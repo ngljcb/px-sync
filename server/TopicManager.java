@@ -1,5 +1,6 @@
 import java.util.HashMap;
-import java.util.Scanner;
+// import java.util.Scanner;
+import java.util.List;
 
 public class TopicManager {
     private HashMap<String, Topic> topics;
@@ -8,35 +9,47 @@ public class TopicManager {
         this.topics = new HashMap<>();
     }
 
-    public synchronized void addPublisher(ClientHandler handler, String topicName) {
-        topics.computeIfAbsent(topicName, Topic::new);
-        handler.sendMessage("Publisher registered for topic: " + topicName);
+    public synchronized void addPublisher(ClientHandler publisher, String topicName) {
+        if(!topics.containsKey(topicName)){
+            Topic newTopic = new Topic(topicName);
+            newTopic.addPublisher(publisher);
+            topics.put(topicName, newTopic);
+        } else {
+            Topic topic = topics.get(topicName);
+            topic.addPublisher(publisher);
+        }
     }
 
-    public synchronized void addSubscriber(ClientHandler handler, String topicName) {
-        Topic topic = topics.computeIfAbsent(topicName, Topic::new);
-        topic.addSubscriber(handler);
-        handler.sendMessage("Subscriber registered for topic: " + topicName);
+    public synchronized void addSubscriber(ClientHandler subscriber, String topicName) {
+        if(!topics.containsKey(topicName)){
+            Topic newTopic = new Topic(topicName);
+            newTopic.addSubscriber(subscriber);
+            topics.put(topicName, newTopic);
+        } else {
+            Topic topic = topics.get(topicName);
+            topic.addSubscriber(subscriber);
+        }
     }
 
-    public synchronized void publishMessage(ClientHandler publisher, String topicName, String message) {
+    public synchronized List<ClientHandler> publishMessage(ClientHandler publisher, String topicName, String message) {
         Topic topic = topics.get(topicName);
         if (topic != null) {
             topic.addMessage(message, publisher);
         }
+        return topic.getSubscribers();
     }
 
-    public synchronized void listMessages(ClientHandler publisher, String topicName) {
-        Topic topic = topics.get(topicName);
-        if (topic != null) {
-            topic.listMessages(publisher);
-        }
-    }
+    // public synchronized void listMessages(ClientHandler publisher, String topicName) {
+    //     Topic topic = topics.get(topicName);
+    //     if (topic != null) {
+    //         topic.listMessages(publisher, topic);
+    //     }
+    // }
 
-    public synchronized void listAllMessages(ClientHandler publisher, String topicName) {
-        Topic topic = topics.get(topicName);
-        if (topic != null) {
-            topic.listAllMessages(publisher);
-        }
-    }
+    // public synchronized void listAllMessages(ClientHandler publisher, String topicName) {
+    //     Topic topic = topics.get(topicName);
+    //     if (topic != null) {
+    //         topic.listAllMessages(publisher, topic);
+    //     }
+    // }
 }
