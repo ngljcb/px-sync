@@ -21,7 +21,7 @@ public class SocketListener implements Runnable {
 
             while (!Thread.interrupted()) {
                 try {
-                    System.out.println("Waiting for a new client...");
+                    System.out.println("SocketListener: Waiting...");
                     /*
                      * Questa istruzione è bloccante, a prescindere da Thread.interrupt(). Occorre
                      * quindi controllare, una volta accettata la connessione, che il server non sia
@@ -33,22 +33,29 @@ public class SocketListener implements Runnable {
                      */
                     Socket socket = this.server.accept();
                     if (!Thread.interrupted()) {
-                        System.out.println("Client connected");
+                        System.out.println("SocketListener: Client connected \n");
 
                         /* crea un nuovo thread per lo specifico socket */
                         Thread handlerThread = new Thread(new ClientHandler(socket, topicManager));
                         handlerThread.start();
                         this.children.add(handlerThread);
-                        /*
-                         * una volta creato e avviato il thread, torna in ascolto per il prossimo client
-                         */
+                        // /*
+                        //  * una volta creato e avviato il thread, torna in ascolto per il prossimo client
+                        //  */
+                        // try {
+                        //     handlerThread.join();
+                        //     break;
+                        // } catch (InterruptedException e) {
+                        //     //se qualcuno interrompe questo thread nel frattempo, terminiamo
+                        //     return;
+                        // }
                     } else {
                         socket.close();
                         break;
                     }
                 } catch (SocketTimeoutException e) {
                     /* in caso di timeout procediamo semplicemente con l'esecuzione */
-                    System.out.println("Timeout, continuing...");
+                    System.out.println("SocketListener: Timeout, continuing...");
                     continue;
                 } catch (IOException e) {
                     /*
@@ -64,7 +71,7 @@ public class SocketListener implements Runnable {
             e.printStackTrace();
         }
 
-        System.out.println("Interrupting children...");
+        System.out.println("SocketListener: Interrupting children...");
         for (Thread child : this.children) {
             System.out.println("Interrupting " + child + "...");
             /*

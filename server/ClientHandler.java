@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientHandler implements Runnable{
@@ -23,59 +25,72 @@ public class ClientHandler implements Runnable{
 
             boolean closed = false;
             while (!closed) {
-                String request = fromClient.nextLine();
-                String[] parts = request.split(" ", 3);
+                String requestLine = fromClient.nextLine();
+                String[] parts = requestLine.split(" ", 3);
+                String request = parts[0];
+                String topic = parts.length > 1 ? parts[1] : "";
+                String message = parts.length > 2 ? parts[2] : "";
+
                 if (!Thread.interrupted()) {
-                    System.out.println("Request: " + request);
-                    try {
-                        switch (parts[0]) {
-                            case "quit":
-                                closed = true;
-                                toClient.println("quit");
-                                break;
-                            case "publish":
-                                if (parts.length > 1) {
-                                    String topic = parts[1];
-                                    this.resource.addPublisher(this, topic);
-                                } else {
-                                    toClient.println("No key");
-                                }
-                                break;
-                            case "subscribe":
-                                if (parts.length > 1) {
-                                    String topic = parts[1];
-                                    this.resource.addSubscriber(this, topic);
-                                } else {
-                                    toClient.println("No key");
-                                }
-                                break;
-                            case "list":
-                                if (parts.length > 1) {
-                                    String topic = parts[1];
-                                    this.resource.listMessages(this, topic);
-                                } else {
-                                    toClient.println("Unknown command");
-                                }
-                                break;
-                            case "listall":
-                                if (parts.length > 1) {
-                                    String topic = parts[1];
-                                    this.resource.listAllMessages(this, topic);
-                                } else {
-                                    toClient.println("Unknown command");
-                                }
-                                break;
-                            default:
-                                toClient.println("Unknown command");
-                        }
-                    } catch (InterruptedException e) {
-                        /*
-                         * se riceviamo un Thread.interrupt() mentre siamo in attesa di add() o
-                         * extract(), interrompiamo il ciclo come richiesto, e passiamo alla chiusura
-                         * del socket
-                         */
-                        toClient.println("quit");
-                        break;
+                    System.out.println("ClientHandler: request type: "+request);
+                    switch (request) {
+                        case "quit":
+                            closed = true;
+                            toClient.println("quit");
+                            break;
+                        case "publish":
+                            if (parts.length > 1) {                                
+                                this.resource.addPublisher(this, topic);
+                                toClient.println("publisher is added to topic "+topic);
+                            } else {
+                                toClient.println("No key");
+                            }
+                            break;
+                        case "subscribe":
+                            if (parts.length > 1) {
+                                this.resource.addSubscriber(this, topic);
+                                toClient.println("ClientHandler: added a subscriber to " + topic + "topic");
+                            } else {
+                                toClient.println("No key");
+                            }
+                            break;
+                        case "list":
+                            if (parts.length > 1) {
+                                // this.resource.listMessages(this, topic);
+                                toClient.println("ClientHandler: list messages reagrding the " + topic + "topic");
+                            } else {
+                                toClient.println("ClientHandler: Unknown command");
+                            }
+                            break;
+                        case "listall":
+                            if (parts.length > 1) {
+                                // this.resource.listAllMessages(this, topic);
+                                toClient.println("ClientHandler: list all messages reagrding the " + topic + "topic");
+                            } else {
+                                toClient.println("ClientHandler: Unknown command");
+                            }
+                            break;
+                        case "send":
+                            if (parts.length > 1) {
+                                List<ClientHandler> subs = this.resource.publishMessage(this, topic, message);
+                                
+                                subs.forEach(s -> {
+                                    try {
+                                        PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
+                                        sender.println(message);
+                                    } catch (IOException e) {
+                                        // TODO Auto-generated catch block
+                                        e.printStackTrace();
+                                    }
+                                });
+                                toClient.println("ClientHandler: publisher sent a message to the " + topic + "topic");
+
+                            } else {
+                                toClient.println("ClientHandler: Unknown command");
+                            }
+                            break;
+                        default:
+                            toClient.println("ClientHandler: Unknown command");
                     }
                 } else {
                     break;
@@ -93,7 +108,14 @@ public class ClientHandler implements Runnable{
         } catch(IOException e) {
             System.err.println("ClientHandler: IOException caught: " + e);
             e.printStackTrace();
+        } catch(Exception e){
+            System.out.println("Server non raggiungibile, premere il tasto invio per terminare l'esecuzione."); 
         }
+    }
+
+    public void sendMessage(String string) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'sendMessage'");
     }
 
 }

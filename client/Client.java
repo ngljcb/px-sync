@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.Socket;
+// import java.net.ConnectException;
 import java.util.Scanner;
 
 public class Client {
@@ -12,7 +13,6 @@ public class Client {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
-        Scanner userInput = new Scanner(System.in);
 
         try {
             // collegamento al server
@@ -21,6 +21,8 @@ public class Client {
 
             // accettazione commandi da parte dell'utente
             System.out.println("Usage: publish <topic> / subscribe <topic> / show / quit");
+
+            Scanner userInput = new Scanner(System.in);
             String command = userInput.nextLine();
 
             while (true) {
@@ -30,26 +32,17 @@ public class Client {
                     publisher.start();
                     try {
                         publisher.join();
+                        break;
                     } catch (InterruptedException e) {
                         //se qualcuno interrompe questo thread nel frattempo, terminiamo
                         return;
                     }
-                // nel caso del commando "subscribe", delega la gestione di IO ad un thread separato per il Subscriber
                 } else if (command.startsWith("subscribe ") && command.split(" ").length > 1) {
                     Thread subscriber = new Thread(new Subscriber(socket, command.split(" ")[1]));
                     subscriber.start();
                     try {
                         subscriber.join();
-                    } catch (InterruptedException e) {
-                        //se qualcuno interrompe questo thread nel frattempo, terminiamo
-                        return;
-                    }
-                // nel caso del commando "show", invia la richiesta al server e attende del risultato
-                } else if (command.equals("show")) {
-                    Thread showtopics = new Thread(new ShowTopics(socket));
-                    showtopics.start();
-                    try {
-                        showtopics.join();
+                        break;
                     } catch (InterruptedException e) {
                         //se qualcuno interrompe questo thread nel frattempo, terminiamo
                         return;
@@ -62,14 +55,13 @@ public class Client {
                 }
             }
 
+            userInput.close();
             socket.close();
-            System.out.println("Socket closed.");
+            System.out.println("Client: Socket closed.");                
 
         } catch (IOException e) {
-            System.err.println("IOException caught: " + e);
+            System.err.println("ConnectException caught");
             e.printStackTrace();
-        } finally {
-            userInput.close();
         }
     }
 }

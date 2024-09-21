@@ -22,7 +22,15 @@ public class Publisher implements Runnable {
             // Scanner per ricevere dati dal server
             Scanner fromServer = new Scanner(this.socket.getInputStream());
 
-            while (true) {
+            // visto che il primo commando viene perso durante la creazione del thread, ricreiamolo e inviamolo al server
+            toServer.println("publish " + this.topic);
+            // Attendere la conferma dal server
+            String response = fromServer.nextLine();
+            System.out.println("Server response: " + response);
+
+            boolean quiting = false;
+
+            while (!quiting) {
                 String request = userInput.nextLine();
 
                 if (request.startsWith("send ")) {
@@ -31,7 +39,7 @@ public class Publisher implements Runnable {
                     toServer.println("send " + this.topic + " " + message);
 
                     // Attendere la conferma dal server
-                    String response = fromServer.nextLine();
+                    response = fromServer.nextLine();
                     System.out.println("Server response: " + response);
 
                 } else if (request.equals("list")) {
@@ -39,7 +47,7 @@ public class Publisher implements Runnable {
                     toServer.println("list " + this.topic);
 
                     // Attendere la risposta del server
-                    String response = fromServer.nextLine();
+                    response = fromServer.nextLine();
                     System.out.println("List of your messages: " + response);
 
                 } else if (request.equals("listall")) {
@@ -47,12 +55,15 @@ public class Publisher implements Runnable {
                     toServer.println("listall " + this.topic);
 
                     // Attendere la risposta del server
-                    String response = fromServer.nextLine();
+                    response = fromServer.nextLine();
                     System.out.println("List of all messages: " + response);
 
                 } else if (request.equals("quit")) {
-                    System.out.println("Publisher closed");
-                    break;
+                    // Invia richiesta per listare i messaggi del publisher
+                    toServer.println("quit");
+                    // toServer.close();
+                    // System.out.println("Publisher closed");
+                    quiting=true;
 
                 } else {
                     System.out.println("Comando non riconosciuto");
@@ -67,6 +78,8 @@ public class Publisher implements Runnable {
         } catch (IOException e) {
             System.err.println("IOException caught: " + e);
             e.printStackTrace();
+        } catch(Exception e){
+            System.out.println("Server non raggiungibile, premere il tasto invio per terminare l'esecuzione."); 
         }
     }
 }
