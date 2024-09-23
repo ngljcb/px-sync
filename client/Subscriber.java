@@ -30,33 +30,46 @@ public class Subscriber implements Runnable {
 
             System.out.println("Actively listening... ");
 
-            while (true) {
-
-                response = fromServer.nextLine();
-                System.out.println(response);
-
-                if (response.equals("quit")) {
-                    break;
+            // Crea un thread separato per ricevere i messaggi dal server
+            Thread serverListener = new Thread(() -> {
+                try {
+                    while (true) {
+                        // Legge messaggi dal server
+                        String serverMessage = fromServer.nextLine();
+                        System.out.println("Message from server: " + serverMessage);
+                        
+                        if (serverMessage.equals("quit")) {
+                            System.out.println("Server has disconnected.");
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Connection to server lost.");
                 }
+            });
 
-                // String request = userInput.nextLine();
+            // Avvia il thread per ascoltare i messaggi dal server
+            serverListener.start();
 
-                // if (request.equals("listall")) {
-                //     // Invia richiesta per listare tutti i messaggi nel topic
-                //     toServer.println("listall " + this.topic);
+            // Gestisce input dell'utente nel thread principale
+            while (true) {
+                String request = userInput.nextLine();
 
-                //     // Attendere la risposta del server
-                //     response = fromServer.nextLine();
-                //     System.out.println("List of all messages: " + response);
+                if (request.equals("listall")) {
+                    // Invia richiesta per listare tutti i messaggi nel topic
+                    toServer.println("listall " + this.topic);
 
-                // } else if (request.equals("quit")) {
-                //     toServer.println("quit");
-                //     break;
+                } else if (request.equals("quit")) {
+                    toServer.println("quit");
+                    break;
 
-                // } else {
-                //     System.out.println("Comando non riconosciuto");
-                // }
+                } else {
+                    System.out.println("Comando non riconosciuto");
+                }
             }
+
+            // Attendere che il thread di ascolto dei messaggi dal server termini
+            serverListener.join();
             
             // Chiudi le risorse
             fromServer.close();
