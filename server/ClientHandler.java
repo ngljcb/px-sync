@@ -1,8 +1,8 @@
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class ClientHandler implements Runnable{
@@ -36,7 +36,7 @@ public class ClientHandler implements Runnable{
                     switch (request) {
                         case "quit":
                             closed = true;
-                            toClient.println("quit");
+                            System.out.println(this.toString() + " is quitting...");
                             break;
                         case "publish":
                             if (parts.length > 1) {                                
@@ -56,7 +56,11 @@ public class ClientHandler implements Runnable{
                             break;
                         case "list":
                             if (parts.length > 1) {
-                                // this.resource.listMessages(this, topic);
+                                Optional<List<Message>> optionalMessages = this.resource.listMessages(this, topic);
+                                optionalMessages.ifPresentOrElse(
+                                    messages -> messages.forEach(toClient::println),
+                                                () -> toClient.println("No messages found for the given topic.")
+                                );
                                 toClient.println("ClientHandler: list messages reagrding the " + topic + "topic");
                             } else {
                                 toClient.println("ClientHandler: Unknown command");
@@ -112,10 +116,4 @@ public class ClientHandler implements Runnable{
             System.out.println("Server non raggiungibile, premere il tasto invio per terminare l'esecuzione."); 
         }
     }
-
-    public void sendMessage(String string) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'sendMessage'");
-    }
-
 }
