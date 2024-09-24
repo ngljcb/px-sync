@@ -1,6 +1,7 @@
 import java.util.HashMap;
 // import java.util.Scanner;
 import java.util.List;
+import java.util.Optional;
 
 public class TopicManager {
     private HashMap<String, Topic> topics;
@@ -39,12 +40,11 @@ public class TopicManager {
         return topic.getSubscribers();
     }
 
-    // public synchronized void listMessages(ClientHandler publisher, String topicName) {
-    //     Topic topic = topics.get(topicName);
-    //     if (topic != null) {
-    //         topic.listMessages(publisher, topic);
-    //     }
-    // }
+    public synchronized Optional<List<Message>> listMessages(ClientHandler publisher, String topicName) {
+        // Otteniamo il topic in modo sicuro con Optional
+        return Optional.ofNullable(topics.get(topicName))
+                       .map(topic -> topic.getMessagesByPublisher(publisher)); // Se esiste, otteniamo i messaggi
+    }
 
     // public synchronized void listAllMessages(ClientHandler publisher, String topicName) {
     //     Topic topic = topics.get(topicName);
@@ -53,3 +53,4 @@ public class TopicManager {
     //     }
     // }
 }
+
