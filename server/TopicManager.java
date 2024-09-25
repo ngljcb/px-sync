@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.ArrayList;
 // import java.util.Scanner;
 import java.util.List;
 import java.util.Optional;
@@ -58,6 +59,11 @@ public class TopicManager {
                                              .flatMap(List::stream)
                                              .toList();  // Ritorna una singola lista con tutti i messaggi
                        });
+    }
+
+    // Metodo per ottenere una lista delle chiavi (i nomi dei topic)
+    public synchronized List<String> getTopicNames() {
+        return new ArrayList<>(topics.keySet());
     }
 
     // public synchronized void listAllMessages(ClientHandler publisher, String topicName) {

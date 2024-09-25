@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.net.Socket;
-// import java.net.ConnectException;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 public class Client {
     public static void main(String[] args) {
@@ -13,20 +13,18 @@ public class Client {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
-
         try {
-            // collegamento al server
-            Socket socket = new Socket(host, port);
+            // Collegamento al server
             System.out.println("Connected to server");
-
-            // accettazione commandi da parte dell'utente
-            System.out.println("Usage: publish <topic> / subscribe <topic> / show / quit");
-
+            
             Scanner userInput = new Scanner(System.in);
-            String command = userInput.nextLine();
-
+            
             while (true) {
-                // nel caso del commando "publish", delega la gestione di IO ad un thread separato per il Publisher
+                Socket socket = new Socket(host, port);
+                // Accettazione comandi da parte dell'utente
+                System.out.println("Usage: publish <topic> / subscribe <topic> / show / quit");    
+                String command = userInput.nextLine();
+                
                 if (command.startsWith("publish ") && command.split(" ").length > 1) {
                     Thread publisher = new Thread(new Publisher(socket, command.split(" ")[1]));
                     publisher.start();
@@ -34,7 +32,6 @@ public class Client {
                         publisher.join();
                         break;
                     } catch (InterruptedException e) {
-                        //se qualcuno interrompe questo thread nel frattempo, terminiamo
                         return;
                     }
                 } else if (command.startsWith("subscribe ") && command.split(" ").length > 1) {
@@ -44,20 +41,34 @@ public class Client {
                         subscriber.join();
                         break;
                     } catch (InterruptedException e) {
-                        //se qualcuno interrompe questo thread nel frattempo, terminiamo
                         return;
                     }
+                } else if (command.equals("show")) {
+                    // Creiamo un CountDownLatch con conteggio 1
+                    CountDownLatch latch = new CountDownLatch(1);
+
+                    // Creiamo e avviamo il thread ShowTopics
+                    Thread showtopics = new Thread(new ShowTopics(socket, latch));
+                    showtopics.start();
+
+                    try {
+                        // Attendere che ShowTopics completi il suo lavoro
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                    // Ora il flusso torna a Client
                 } else if (command.equals("quit")) {
                     System.out.println("Disconnecting from server...");
                     break;
                 } else {
                     System.out.println("Unknown command");
-                }
+                }                
+                socket.close();
             }
 
             userInput.close();
-            socket.close();
-            System.out.println("Client: Socket closed.");                
+            System.out.println("Client: Socket closed.");
 
         } catch (IOException e) {
             System.err.println("ConnectException caught");

@@ -96,6 +96,11 @@ public class ClientHandler implements Runnable{
                                 toClient.println("ClientHandler: Unknown command");
                             }
                             break;
+                        case "show":
+                            List<String> topicNames = this.resource.getTopicNames();
+                            topicNames.forEach(toClient::println);
+                            toClient.println("SHOWTOPICbreak");
+                            break;
                         default:
                             toClient.println("ClientHandler: Unknown command");
                     }
