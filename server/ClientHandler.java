@@ -58,8 +58,8 @@ public class ClientHandler implements Runnable{
                             if (parts.length > 1) {
                                 Optional<List<Message>> optionalMessages = this.resource.listMessages(this, topic);
                                 optionalMessages.ifPresentOrElse(
-                                    messages -> messages.forEach(toClient::println),
-                                                () -> toClient.println("No messages found for the given topic.")
+                                    messages -> messages.forEach(toClient::println),                               // Stampa ogni messaggio
+                                                () -> toClient.println("No messages found for the given topic.") // In caso di assenza di messaggi
                                 );
                                 toClient.println("ClientHandler: list messages reagrding the " + topic + "topic");
                             } else {
@@ -68,7 +68,11 @@ public class ClientHandler implements Runnable{
                             break;
                         case "listall":
                             if (parts.length > 1) {
-                                // this.resource.listAllMessages(this, topic);
+                                Optional<List<Message>> optionalMessages = this.resource.listMessagesByTopic(topic);
+                                optionalMessages.ifPresentOrElse(
+                                    messages -> messages.forEach(toClient::println),                              // Stampa ogni messaggio
+                                                () -> toClient.println("No messages found for the given topic.")  // In caso di assenza di messaggi
+                                );
                                 toClient.println("ClientHandler: list all messages reagrding the " + topic + "topic");
                             } else {
                                 toClient.println("ClientHandler: Unknown command");
@@ -83,7 +87,6 @@ public class ClientHandler implements Runnable{
                                         PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
                                         sender.println(message);
                                     } catch (IOException e) {
-                                        // TODO Auto-generated catch block
                                         e.printStackTrace();
                                     }
                                 });
@@ -116,4 +119,5 @@ public class ClientHandler implements Runnable{
             System.out.println("Server non raggiungibile, premere il tasto invio per terminare l'esecuzione."); 
         }
     }
+
 }

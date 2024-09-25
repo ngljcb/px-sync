@@ -60,7 +60,7 @@ public class Subscriber implements Runnable {
 
                 if (request.equals("listall")) {
                     // Invia richiesta per listare tutti i messaggi nel topic
-                    toServer.println("list" + this.topic);
+                    toServer.println("listall " + this.topic);
 
 
                 } else if (request.equals("quit")) {
