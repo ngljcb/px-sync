@@ -23,12 +23,10 @@ public class TopicExtractor implements Runnable {
                     System.out.println("- " + topic);
                 }
             }
-            } catch (Exception e) {
-                System.out.println("Si e' verificato un errore durante l'estrazione dei topic: " + e.getMessage());
-                e.printStackTrace();
-            }
+        } catch (Exception e) {
+            System.out.println("Si e' verificato un errore durante l'estrazione dei topic: " + e.getMessage());
+            e.printStackTrace();
         }
-    }
-    
+    } 
 
 }   
