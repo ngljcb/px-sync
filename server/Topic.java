@@ -12,7 +12,7 @@ public class Topic {
 
     public Topic(String name) {
         this.name = name;
-        this.messages = new HashMap<>();
+        this.messages = new HashMap<>(); // TODO: create hashmap<publisher, List<Messages>>
         this.subscribers = new ArrayList<>();
         this.publishers = new ArrayList<>();
         this.counter = 0;

@@ -46,6 +46,20 @@ public class TopicManager {
                        .map(topic -> topic.getMessagesByPublisher(publisher)); // Se esiste, otteniamo i messaggi
     }
 
+    public synchronized Optional<List<Message>> listMessagesByTopic(String topicName) {
+        // Otteniamo il topic in modo sicuro con Optional
+        return Optional.ofNullable(topics.get(topicName))
+                       .map(topic -> {
+                           // Otteniamo la mappa di ClientHandler -> List<Message>
+                           HashMap<ClientHandler, List<Message>> messagesMap = topic.getAllMessages();
+                           
+                           // Combiniamo tutte le liste di messaggi in una singola lista
+                           return messagesMap.values().stream()
+                                             .flatMap(List::stream)
+                                             .toList();  // Ritorna una singola lista con tutti i messaggi
+                       });
+    }
+
     // public synchronized void listAllMessages(ClientHandler publisher, String topicName) {
     //     Topic topic = topics.get(topicName);
     //     if (topic != null) {
@@ -53,4 +67,3 @@ public class TopicManager {
     //     }
     // }
 }
-
