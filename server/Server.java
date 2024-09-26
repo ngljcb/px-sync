@@ -32,7 +32,7 @@ public class Server {
 
                 // nel caso del commando "show", delega la gestione di IO ad un thread separato estrarre tutti i topic
                 if (command.startsWith("show")) {
-                    Thread topicExtractor = new Thread(new TopicExtractor());
+                    Thread topicExtractor = new Thread(new TopicExtractor(topicManager));
                     topicExtractor.start();
                     try {
                         topicExtractor.join();
@@ -42,7 +42,7 @@ public class Server {
                     }
                 // nel caso del commando "inspect", delega la gestione di IO ad un thread separato per il Subscriber
                 } else if (command.startsWith("inspect")) {
-                    Thread topicInspector = new Thread(new TopicInspector());
+                    Thread topicInspector = new Thread(new TopicInspector(topicManager));
                     topicInspector.start();
                     try {
                         topicInspector.join();

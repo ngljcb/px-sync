@@ -66,10 +66,7 @@ public class TopicManager {
         return new ArrayList<>(topics.keySet());
     }
 
-    // public synchronized void listAllMessages(ClientHandler publisher, String topicName) {
-    //     Topic topic = topics.get(topicName);
-    //     if (topic != null) {
-    //         topic.listAllMessages(publisher, topic);
-    //     }
-    // }
+    public synchronized Optional<Topic> getTopicByName(String topicName) {
+        return Optional.ofNullable(topics.get(topicName));
+    }
 }
