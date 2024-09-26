@@ -51,20 +51,27 @@ public class Topic {
         return this.subscribers;
     }
 
-    // public synchronized void deleteMessage(int id) {
-    //     Iterator<Message> iterator = this.messages.iterator();
-    //     while (iterator.hasNext()) {
-    //         Message message = iterator.next();
-    //         if (message.getid() == id) {
-    //             iterator.remove(); // Rimuove il messaggio
-    //             break;
-    //         }
-    //     }
-    // }
+    // Nuovo metodo: Restituisce una lista di tutti i messaggi indipendentemente dal publisher
+    public synchronized List<Message> getAllMessagesAsList() {
+        List<Message> allMessages = new ArrayList<>();
+        for (List<Message> messageList : messages.values()) {
+            allMessages.addAll(messageList);
+        }
+        return allMessages;
+    }
 
-    // private void notifySubscribers(Message message) {
-    //     for (ClientHandler subscriber : this.subscribers) {
-    //         subscriber.sendMessage(message); // Invia il messaggio ai subscriber
-    //     }
-    // }
+    // Nuovo metodo: Elimina un messaggio per ID e ritorna true se il messaggio è stato trovato e cancellato
+    public synchronized boolean deleteMessageById(int id) {
+        for (List<Message> messageList : messages.values()) {
+            Iterator<Message> iterator = messageList.iterator();
+            while (iterator.hasNext()) {
+                Message message = iterator.next();
+                if (message.getid() == id) {
+                    iterator.remove(); // Rimuove il messaggio
+                    return true; // Indica che il messaggio è stato trovato e cancellato
+                }
+            }
+        }
+        return false; // Nessun messaggio trovato con l'ID dato
+    }
 }
