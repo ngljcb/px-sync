@@ -1,20 +1,29 @@
 import java.util.List;
 
 public class TopicExtractor implements Runnable {
-    private TopicManager topicManager; // Risorsa condivisa
+    
+    // Risorsa condivisa per gestire i topic
+    private TopicManager topicManager;
 
-    // Costruttore che accetta la risorsa condivisa TopicManager
+    /**
+     * Costruttore della classe TopicExtractor.
+     * 
+     * @param topicManager La risorsa condivisa TopicManager che gestisce i topic.
+     */
     public TopicExtractor(TopicManager topicManager) {
         this.topicManager = topicManager;
     }
 
+    /**
+     * Metodo eseguito nel thread per estrarre e stampare i nomi dei topic gestiti dal TopicManager.
+     */
     @Override
     public void run() {
-        // Chiama la funzione getTopicNames() e stampa i risultati
+        // Chiama la funzione getTopicNames() per ottenere la lista dei topic
         List<String> topicNames = topicManager.getTopicNames();
 
-        // Stampa tutti i topic
-        System.out.println("List of available topics:");
-        topicNames.forEach(System.out::println);
+        // Stampa tutti i topic ottenuti
+        System.out.println("Topics:");
+        topicNames.forEach(topic -> System.out.println(" - " + topic)); // Stampa ogni topic preceduto da un trattino
     }
 }

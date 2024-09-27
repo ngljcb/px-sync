@@ -4,71 +4,122 @@ import java.util.List;
 import java.util.Iterator;
 
 public class Topic {
-    private String name; // Nome del topic
-    private HashMap<ClientHandler, List<Message>> messages; // Lista dei messaggi
-    private List<ClientHandler> subscribers; // Lista dei subscriber
-    private List<ClientHandler> publishers; // Lista dei publishers
-    private int counter; // Contatore per gli ID dei messaggi
+
+    private String name;                                    // Nome del topic
+    private HashMap<ClientHandler, List<Message>> messages; // Risorsa condivisa per associare publisher ai loro messaggi
+    private List<ClientHandler> subscribers;                // Lista dei subscriber
+    private List<ClientHandler> publishers;                 // Lista dei publishers
+    private int counter;                                    // Contatore per gli ID dei messaggi
 
     public Topic(String name) {
         this.name = name;
-        this.messages = new HashMap<>(); // TODO: create hashmap<publisher, List<Messages>>
-        this.subscribers = new ArrayList<>();
-        this.publishers = new ArrayList<>();
-        this.counter = 0;
+        this.messages = new HashMap<>();        // Inizializza la risorsa condivisa per i messaggi
+        this.subscribers = new ArrayList<>();   // Inizializza la lista dei subscriber
+        this.publishers = new ArrayList<>();    // Inizializza la lista dei publisher
+        this.counter = 0;                       // Imposta il contatore dei messaggi a 0
     }
 
+    /**
+     * Aggiunge un nuovo messaggio da un publisher specifico.
+     * 
+     * @param text Il contenuto del messaggio.
+     * @param publisher Il ClientHandler che ha inviato il messaggio.
+     */
     public synchronized void addMessage(String text, ClientHandler publisher) {
+        // Incrementa l'ID del messaggio
         this.counter++;
-        // Message message = new Message(this.counter, text, publisher);
-        if(messages.containsKey(publisher)) {
+        
+        // Verifica se il publisher ha già messaggi nella risorsa condivisa
+        if (messages.containsKey(publisher)) {
+            // Se il publisher ha già una lista di messaggi, aggiungi il nuovo messaggio
             List<Message> msgs = messages.get(publisher);
             msgs.add(new Message(counter, text, publisher));
         } else {
+            // Se il publisher non ha messaggi, crea una nuova lista e aggiungila alla risorsa condivisa
             List<Message> msgs = new ArrayList<>();
             msgs.add(new Message(counter, text, publisher));
             messages.put(publisher, msgs);
         }
     }
 
+    /**
+     * Aggiunge un subscriber al topic.
+     * 
+     * @param subscriber Il ClientHandler che si vuole iscrivere al topic.
+     */
     public synchronized void addSubscriber(ClientHandler subscriber) {
-        subscribers.add(subscriber);
+        subscribers.add(subscriber); // Aggiungi il subscriber alla lista
     }
 
+    /**
+     * Aggiunge un publisher al topic.
+     * 
+     * @param publisher Il ClientHandler che si vuole registrare come publisher.
+     */
     public synchronized void addPublisher(ClientHandler publisher) {
-        publishers.add(publisher);
+        publishers.add(publisher); // Aggiungi il publisher alla lista
     }
 
+    /**
+     * Restituisce la lista dei messaggi associati a un publisher specifico.
+     * 
+     * @param publisher Il ClientHandler di cui si vogliono ottenere i messaggi.
+     * @return La lista di messaggi associata al publisher, o null se non esistono.
+     */
     public synchronized List<Message> getMessagesByPublisher(ClientHandler publisher) {
-        return this.messages.get(publisher);
+        return this.messages.get(publisher); // Ritorna i messaggi del publisher
     }
 
+    /**
+     * Restituisce tutti i messaggi nel topic, raggruppati per publisher.
+     * 
+     * @return La risorsa condivisa contenente i messaggi per ogni publisher.
+     */
     public synchronized HashMap<ClientHandler, List<Message>> getAllMessages() {
-        return this.messages;
+        return this.messages; // Ritorna tutti i messaggi associati ai publisher
     }
 
+    /**
+     * Restituisce la lista di tutti i subscriber registrati a questo topic.
+     * 
+     * @return La lista dei subscriber.
+     */
     public synchronized List<ClientHandler> getSubscribers() {
-        return this.subscribers;
+        return this.subscribers; // Ritorna la lista dei subscriber
     }
 
-    // Nuovo metodo: Restituisce una lista di tutti i messaggi indipendentemente dal publisher
+    /**
+     * Restituisce una lista di tutti i messaggi nel topic, indipendentemente dal publisher.
+     * 
+     * @return Una lista contenente tutti i messaggi nel topic.
+     */
     public synchronized List<Message> getAllMessagesAsList() {
         List<Message> allMessages = new ArrayList<>();
+        // Itera attraverso tutte le liste di messaggi dei publisher
         for (List<Message> messageList : messages.values()) {
+            // Aggiungi tutti i messaggi alla lista finale
             allMessages.addAll(messageList);
         }
-        return allMessages;
+        return allMessages; // Ritorna la lista di tutti i messaggi
     }
 
-    // Nuovo metodo: Elimina un messaggio per ID e ritorna true se il messaggio è stato trovato e cancellato
+    /**
+     * Elimina un messaggio dal topic in base al suo ID.
+     * 
+     * @param id L'ID del messaggio da eliminare.
+     * @return true se il messaggio è stato trovato e cancellato, false altrimenti.
+     */
     public synchronized boolean deleteMessageById(int id) {
+        // Itera attraverso tutte le liste di messaggi dei publisher
         for (List<Message> messageList : messages.values()) {
             Iterator<Message> iterator = messageList.iterator();
+            // Cerca il messaggio con l'ID specificato
             while (iterator.hasNext()) {
                 Message message = iterator.next();
                 if (message.getid() == id) {
-                    iterator.remove(); // Rimuove il messaggio
-                    return true; // Indica che il messaggio è stato trovato e cancellato
+                    // Se trovato, rimuove il messaggio
+                    iterator.remove();
+                    return true; // Conferma che il messaggio è stato eliminato
                 }
             }
         }
