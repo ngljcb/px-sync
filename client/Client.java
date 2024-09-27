@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
-import java.io.PrintWriter;
+import java.util.concurrent.CountDownLatch;
 
 public class Client {
 
@@ -29,50 +29,17 @@ public class Client {
             // Scanner per accettare input da tastiera
             Scanner userInput = new Scanner(System.in);
 
-            // Crea una connessione socket al server
-            Socket socket = new Socket(host, port);
-
-            // Crea un thread separato per ascoltare i messaggi dal server
-            Thread serverListener = new Thread(() -> {
-                try {
-                    // Scanner per ricevere i dati dal server
-                    Scanner fromServer = new Scanner(socket.getInputStream());
-
-                    // Continua a leggere messaggi dal server finché il client non si disconnette
-                    while (fromServer.hasNextLine()) {
-                        String response = fromServer.nextLine();
-
-                        // Se il server invia il comando "quit", interrompe il ciclo
-                        if (response.equals("quit")) {
-                            System.out.println("\nErrore: Il server si è disconnesso.\n");
-                            System.out.println("Comandi disponibili >> quit");
-                            break;
-                        }
-                    }
-
-                    // Chiude il canale di comunicazione con il server
-                    fromServer.close();
-                } catch (IOException e) {
-                    System.out.println("Connessione al server persa.");
-                }
-            });
-
-            // Avvia il thread per ascoltare i messaggi dal server
-            serverListener.start();
-
             // Ciclo principale per gestire i comandi dell'utente
             while (true) {
-                if (!socket.isClosed()) {
-                    // Mostra all'utente come usare il client
-                    System.out.println("Comandi disponibili >> publish <topic> / subscribe <topic> / show / quit");
-                } else {
-                    // Mostra all'utente come usare il client
-                    System.out.println("Comandi disponibili >> quit");
-                }
+                // Crea una connessione socket al server
+                Socket socket = new Socket(host, port);
+
+                // Mostra all'utente come usare il client
+                System.out.println("Comandi disponibili  >>  publish <topic> / subscribe <topic> / show / quit");
                 String command = userInput.nextLine();
 
                 // Se il comando è "publish", avvia il thread Publisher
-                if (!socket.isClosed() && command.startsWith("publish ") && command.split(" ").length > 1) {
+                if (command.startsWith("publish ") && command.split(" ").length > 1) {
                     Thread publisher = new Thread(new Publisher(socket, command.split(" ")[1]));
                     publisher.start();
                     try {
@@ -80,12 +47,11 @@ public class Client {
                         publisher.join();
                         break; // Esce dal ciclo dopo la pubblicazione
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
                         return;
                     }
-                }
+                } 
                 // Se il comando è "subscribe", avvia il thread Subscriber
-                else if (!socket.isClosed() && command.startsWith("subscribe ") && command.split(" ").length > 1) {
+                else if (command.startsWith("subscribe ") && command.split(" ").length > 1) {
                     Thread subscriber = new Thread(new Subscriber(socket, command.split(" ")[1]));
                     subscriber.start();
                     try {
@@ -93,38 +59,38 @@ public class Client {
                         subscriber.join();
                         break; // Esce dal ciclo dopo la sottoscrizione
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
                         return;
                     }
-                }
-                // Se il comando è "show", invia una richiesta per mostrare i topic
-                else if (!socket.isClosed() && command.equals("show")) {
-                    PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
-                    toServer.println("show");
-                }
+                } 
+                // Se il comando è "show", avvia il thread ShowTopics
+                else if (command.equals("show")) {
+                    // Creiamo un CountDownLatch con conteggio 1 per sincronizzare i thread
+                    CountDownLatch latch = new CountDownLatch(1);
+
+                    // Creiamo e avviamo il thread ShowTopics per mostrare i topic
+                    Thread showtopics = new Thread(new ShowTopics(socket, latch));
+                    showtopics.start();
+
+                    try {
+                        // Attendere che ShowTopics completi il suo lavoro
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                    // Ora il flusso torna a Client
+                } 
                 // Se il comando è "quit", interrompe la connessione
                 else if (command.equals("quit")) {
-                    if (!socket.isClosed()) {  // Controlla se il socket è ancora aperto
-                        PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
-                        toServer.println("quit");
-                        System.out.println("Disconnessione dal server...");
-                    }
+                    System.out.println("Disconnessione dal server...");
                     break;
-                }
+                } 
                 // Se il comando non è valido, mostra un messaggio di errore
                 else {
-                    System.out.println("Comando sconosciuto. \n");
+                    System.out.println("Comando sconosciuto");
                 }
-            }
 
-            // Chiude il socket dopo aver eseguito il comando
-            socket.close();
-
-            // Gestisce l'eccezione per il join del thread serverListener
-            try {
-                serverListener.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Chiude il socket dopo aver eseguito il comando
+                socket.close();
             }
 
             // Chiude le risorse usate dall'utente

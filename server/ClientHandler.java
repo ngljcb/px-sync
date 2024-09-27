@@ -59,7 +59,6 @@ public class ClientHandler implements Runnable {
                             if (parts.length > 1) {                                
                                 this.resource.addPublisher(this, topic);
                                 toClient.println("Publisher aggiunto al topic " + topic);
-                                toClient.println("Comandi disponibili  >>  send <message> / list / listall / quit");
                             } else {
                                 toClient.println("Nessuna chiave specificata.");
                             }
@@ -70,7 +69,6 @@ public class ClientHandler implements Runnable {
                             if (parts.length > 1) {
                                 this.resource.addSubscriber(this, topic);
                                 toClient.println("Subscriber aggiunto al topic " + topic);
-                                toClient.println("Comandi disponibili  >>  quit \n");
                             } else {
                                 toClient.println("Nessuna chiave specificata.");
                             }
@@ -123,8 +121,7 @@ public class ClientHandler implements Runnable {
                                         e.printStackTrace();
                                     }
                                 });
-                                toClient.println("Messaggio inviato ai subscriber del topic " + topic + "\n");
-                                toClient.println("Comandi disponibili  >>  send <message> / list / listall / quit");
+                                
                             } else {
                                 toClient.println("Comando sconosciuto. \n");
                             }

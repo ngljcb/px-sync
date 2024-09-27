@@ -1,4 +1,4 @@
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -6,11 +6,11 @@ import java.util.Optional;
 public class TopicManager {
 
     // Risorsa condivisa che associa i nomi dei topic agli oggetti Topic
-    private HashMap<String, Topic> topics;
+    private ConcurrentHashMap<String, Topic> topics;
 
     public TopicManager() {
         // Inizializza la risorsa condivisa dei topic
-        this.topics = new HashMap<>();
+        this.topics = new ConcurrentHashMap<>();
     }
 
     /**
@@ -71,7 +71,7 @@ public class TopicManager {
         }
 
         // Ritorna la lista di subscriber per quel topic
-        return topic.getSubscribers();
+        return topic != null ? topic.getSubscribers() : new ArrayList<>();
     }
 
     /**
@@ -98,7 +98,7 @@ public class TopicManager {
         return Optional.ofNullable(topics.get(topicName))
                        .map(topic -> {
                            // Ottiene la mappa dei messaggi associati a ciascun ClientHandler
-                           HashMap<ClientHandler, List<Message>> messagesMap = topic.getAllMessages();
+                           ConcurrentHashMap<ClientHandler, List<Message>> messagesMap = topic.getAllMessages();
 
                            // Combina tutte le liste di messaggi in una singola lista e la ritorna
                            return messagesMap.values().stream()

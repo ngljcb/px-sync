@@ -1,22 +1,22 @@
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Iterator;
 
 public class Topic {
 
     private String name;                                    // Nome del topic
-    private HashMap<ClientHandler, List<Message>> messages; // Risorsa condivisa per associare publisher ai loro messaggi
+    private ConcurrentHashMap<ClientHandler, List<Message>> messages; // Risorsa condivisa per associare publisher ai loro messaggi
     private List<ClientHandler> subscribers;                // Lista dei subscriber
     private List<ClientHandler> publishers;                 // Lista dei publishers
     private int counter;                                    // Contatore per gli ID dei messaggi
 
     public Topic(String name) {
         this.name = name;
-        this.messages = new HashMap<>();        // Inizializza la risorsa condivisa per i messaggi
-        this.subscribers = new ArrayList<>();   // Inizializza la lista dei subscriber
-        this.publishers = new ArrayList<>();    // Inizializza la lista dei publisher
-        this.counter = 0;                       // Imposta il contatore dei messaggi a 0
+        this.messages = new ConcurrentHashMap<>();  // Inizializza la risorsa condivisa per i messaggi
+        this.subscribers = new ArrayList<>();       // Inizializza la lista dei subscriber
+        this.publishers = new ArrayList<>();        // Inizializza la lista dei publisher
+        this.counter = 0;                           // Imposta il contatore dei messaggi a 0
     }
 
     /**
@@ -30,16 +30,8 @@ public class Topic {
         this.counter++;
         
         // Verifica se il publisher ha già messaggi nella risorsa condivisa
-        if (messages.containsKey(publisher)) {
-            // Se il publisher ha già una lista di messaggi, aggiungi il nuovo messaggio
-            List<Message> msgs = messages.get(publisher);
-            msgs.add(new Message(counter, text, publisher));
-        } else {
-            // Se il publisher non ha messaggi, crea una nuova lista e aggiungila alla risorsa condivisa
-            List<Message> msgs = new ArrayList<>();
-            msgs.add(new Message(counter, text, publisher));
-            messages.put(publisher, msgs);
-        }
+        messages.computeIfAbsent(publisher, k -> new ArrayList<>())
+                .add(new Message(counter, text, publisher));  // Aggiungi il messaggio al publisher
     }
 
     /**
@@ -75,7 +67,7 @@ public class Topic {
      * 
      * @return La risorsa condivisa contenente i messaggi per ogni publisher.
      */
-    public synchronized HashMap<ClientHandler, List<Message>> getAllMessages() {
+    public synchronized ConcurrentHashMap<ClientHandler, List<Message>> getAllMessages() {
         return this.messages; // Ritorna tutti i messaggi associati ai publisher
     }
 

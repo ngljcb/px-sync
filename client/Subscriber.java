@@ -40,22 +40,23 @@ public class Subscriber implements Runnable {
                     // Scanner per ricevere i dati dal server
                     Scanner fromServer = new Scanner(this.socket.getInputStream());
 
-                    // Attende una risposta di conferma dal server
-                    String response = fromServer.nextLine();
-                    System.out.println(response);
+                    // System.out.println(response);
                     System.out.println("\nMessaggi per il topic " + this.topic + ":");
-
+                    
                     // Continua a leggere messaggi dal server finché il subscriber non termina
                     while (!quiting) {
-                        // Legge il prossimo messaggio dal server
-                        response = fromServer.nextLine();
+                        
+                        // Attende una risposta di conferma dal server
+                        String response = fromServer.nextLine();
 
                         // Se il server invia il comando "quit", interrompe il ciclo
                         if (response.equals("quit")) {
                             System.out.println("Il server si è disconnesso.");
+                            System.out.println("Comandi disponibili  >>  quit");
                             quiting = true;
                             break;
                         }
+                        System.out.println(response);
                     }
                     // Chiude il canale di comunicazione con il server
                     fromServer.close();
@@ -70,15 +71,15 @@ public class Subscriber implements Runnable {
 
             // Gestisce l'input dell'utente nel thread principale
             while (!quiting) {
+                if (socket.isClosed()) {
+                    // Mostra all'utente come usare il client
+                    System.out.println("Comandi disponibili  >>  quit");
+                }
+
                 // Legge il comando dell'utente da tastiera
                 String request = userInput.nextLine();
 
-                // Comando "listall": invia la richiesta per ottenere tutti i messaggi del topic
-                if (request.equals("listall")) {
-                    toServer.println("listall " + this.topic);
-
-                // Comando "quit": invia la richiesta di disconnessione al server
-                } else if (request.equals("quit")) {
+                if (request.equals("quit")) {
                     toServer.println("quit");
                     quiting = true;
 
