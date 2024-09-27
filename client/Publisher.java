@@ -42,7 +42,7 @@ public class Publisher implements Runnable {
 
                     // Attende una risposta di conferma dal server
                     String response = fromServer.nextLine();
-                    System.out.println("Server response: " + response);
+                    System.out.println(response);
 
                     // Continua a leggere messaggi dal server finché il publisher non termina
                     while (!quiting) {
@@ -52,7 +52,7 @@ public class Publisher implements Runnable {
 
                         // Se il server invia il comando "quit", interrompe il ciclo
                         if (response.equals("quit")) {
-                            System.out.println("Server has disconnected.");
+                            System.out.println("Il server si è disconnesso.");
                             quiting = true;
                             break;
                         }
@@ -61,7 +61,7 @@ public class Publisher implements Runnable {
                     fromServer.close();
                 } catch (Exception e) {
                     // Gestione dell'eccezione se la connessione al server viene persa
-                    System.out.println("Connection to server lost.");
+                    System.out.println("Connessione al server persa.");
                 }
             });
 
@@ -106,7 +106,7 @@ public class Publisher implements Runnable {
 
         } catch (IOException e) {
             // Gestione delle eccezioni di input/output
-            System.err.println("IOException caught: " + e);
+            System.err.println("Eccezione IOException catturata: " + e);
             e.printStackTrace();
         } catch (Exception e) {
             // Gestione di eccezioni generali in caso di problemi di connessione

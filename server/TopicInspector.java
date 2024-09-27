@@ -34,7 +34,7 @@ public class TopicInspector implements Runnable {
 
         // Controlla se il topic esiste
         if (optionalTopic.isEmpty()) {
-            System.out.println("Topic non trovato.");
+            System.out.println("Errore: Topic non trovato. \n");
             return;
         }
 

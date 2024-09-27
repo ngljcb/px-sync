@@ -42,13 +42,13 @@ public class Subscriber implements Runnable {
 
                     // Attende una risposta di conferma dal server
                     String response = fromServer.nextLine();
-                    System.out.println("Risposta dal server: " + response);
+                    System.out.println(response);
+                    System.out.println("\nMessaggi per il topic " + this.topic + ":");
 
                     // Continua a leggere messaggi dal server finché il subscriber non termina
                     while (!quiting) {
                         // Legge il prossimo messaggio dal server
                         response = fromServer.nextLine();
-                        System.out.println("Messaggio dal server: " + response);
 
                         // Se il server invia il comando "quit", interrompe il ciclo
                         if (response.equals("quit")) {

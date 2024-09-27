@@ -34,7 +34,7 @@ public class SocketListener implements Runnable {
             while (!Thread.interrupted()) {
                 try {
                     // Attende la connessione di un nuovo client
-                    System.out.println("SocketListener: In attesa di una connessione...");
+                    //System.out.println("SocketListener: In attesa di una connessione...");
                     Socket socket = this.server.accept();
 
                     // Se il thread non è interrotto, crea un nuovo thread per gestire il client
@@ -54,7 +54,7 @@ public class SocketListener implements Runnable {
                     }
                 } catch (SocketTimeoutException e) {
                     // In caso di timeout, continua ad aspettare nuove connessioni
-                    System.out.println("SocketListener: Timeout, continuando...");
+                    //System.out.println("SocketListener: Timeout, continuando...");
                     continue;
                 } catch (IOException e) {
                     // Gestione delle eccezioni di input/output

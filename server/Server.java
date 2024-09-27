@@ -37,8 +37,12 @@ public class Server {
 
             String command = "";
 
+            // Flag per terminare il ciclo
+            boolean quiting = false;
+
             // Ciclo principale che accetta i comandi dall'utente
-            while (!command.equals("quit")) {
+            while (!quiting) {
+                System.out.println("Comandi disponibili  >>  inspect / show / quit");
                 command = userInput.nextLine();
 
                 // Se l'utente inserisce "show", avvia un thread per estrarre tutti i topic
@@ -65,9 +69,13 @@ public class Server {
                         return;
                     }
 
+                // Se l'utente inserisce "quit", esce dal ciclo principale
+                } else if (command.startsWith("quit")) {
+                    quiting = true;
+
                 // Se il comando non è riconosciuto, stampa un messaggio di errore
                 } else {
-                    System.out.println("Comando sconosciuto");
+                    System.out.println("Comando sconosciuto. \n");
                 }
             }
 

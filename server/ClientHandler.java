@@ -59,6 +59,7 @@ public class ClientHandler implements Runnable {
                             if (parts.length > 1) {                                
                                 this.resource.addPublisher(this, topic);
                                 toClient.println("Publisher aggiunto al topic " + topic);
+                                toClient.println("Comandi disponibili  >>  send <message> / list / listall / quit");
                             } else {
                                 toClient.println("Nessuna chiave specificata.");
                             }
@@ -68,7 +69,8 @@ public class ClientHandler implements Runnable {
                             // Aggiunge un subscriber al topic
                             if (parts.length > 1) {
                                 this.resource.addSubscriber(this, topic);
-                                toClient.println("ClientHandler: Subscriber aggiunto al topic " + topic);
+                                toClient.println("Subscriber aggiunto al topic " + topic);
+                                toClient.println("Comandi disponibili  >>  quit \n");
                             } else {
                                 toClient.println("Nessuna chiave specificata.");
                             }
@@ -85,9 +87,9 @@ public class ClientHandler implements Runnable {
                                     },
                                     () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".") // Se non ci sono messaggi
                                 );
-                                toClient.println("ClientHandler: Elenco dei messaggi per il topic " + topic);
+                                toClient.println("Elenco dei messaggi per il topic " + topic);
                             } else {
-                                toClient.println("ClientHandler: Comando sconosciuto.");
+                                toClient.println("Comando sconosciuto. \n");
                             }
                             break;
 
@@ -104,7 +106,7 @@ public class ClientHandler implements Runnable {
                                 );
                                 toClient.println("ClientHandler: Elenco di tutti i messaggi per il topic " + topic);
                             } else {
-                                toClient.println("ClientHandler: Comando sconosciuto.");
+                                toClient.println("Comando sconosciuto. \n");
                             }
                             break;
 
@@ -121,23 +123,31 @@ public class ClientHandler implements Runnable {
                                         e.printStackTrace();
                                     }
                                 });
-                                toClient.println("ClientHandler: Il publisher ha inviato un messaggio al topic " + topic);
-
+                                toClient.println("Messaggio inviato ai subscriber del topic " + topic + "\n");
+                                toClient.println("Comandi disponibili  >>  send <message> / list / listall / quit");
                             } else {
-                                toClient.println("ClientHandler: Comando sconosciuto.");
+                                toClient.println("Comando sconosciuto. \n");
                             }
                             break;
 
                         case "show":
                             // Mostra tutti i topic disponibili
                             List<String> topicNames = this.resource.getTopicNames();
-                            topicNames.forEach(toClient::println);
+                            
+                            if(topicNames.size() == 0) {
+                                toClient.println("Attualmente non ci sono topic disponibili. \n");
+                            } else {
+                                // Stampa tutti i topic ottenuti
+                                toClient.println("Topics:");
+                                topicNames.forEach(t -> toClient.println(" - " + t));
+                                toClient.println("\n");
+                            }
                             toClient.println("SHOWTOPICbreak");
                             break;
 
                         default:
                             // Gestione di comando sconosciuto
-                            toClient.println("ClientHandler: Comando sconosciuto.");
+                            toClient.println("Comando sconosciuto. \n");
                     }
                 } else {
                     break;
