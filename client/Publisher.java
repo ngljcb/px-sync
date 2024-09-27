@@ -60,6 +60,7 @@ public class Publisher implements Runnable {
                 } catch (Exception e) {
                     // Gestione dell'eccezione se la connessione al server viene persa
                     System.out.println("Connessione al server persa.");
+                    System.out.println("Comandi disponibili  >>  quit");
                 }
             });
 

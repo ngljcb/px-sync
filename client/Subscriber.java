@@ -63,6 +63,7 @@ public class Subscriber implements Runnable {
                 } catch (Exception e) {
                     // Gestione dell'eccezione se la connessione al server viene persa
                     System.out.println("Connessione al server persa.");
+                    System.out.println("Comandi disponibili  >>  quit");
                 }
             });
 
@@ -80,12 +81,14 @@ public class Subscriber implements Runnable {
                 String request = userInput.nextLine();
 
                 if (request.equals("quit")) {
-                    toServer.println("quit");
+                    if (!socket.isClosed()) {
+                        toServer.println("quit");
+                    }
                     quiting = true;
 
                 // Comando non riconosciuto
                 } else {
-                    System.out.println("Comando non riconosciuto");
+                    System.out.println("Comando non riconosciuto. \n");
                 }
             }
 
