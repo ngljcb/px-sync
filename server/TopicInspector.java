@@ -3,75 +3,93 @@ import java.util.Optional;
 import java.util.Scanner;
 
 public class TopicInspector implements Runnable {
-    private TopicManager topicManager; // Risorsa condivisa
 
-    // Costruttore che accetta la risorsa condivisa TopicManager
+    // Risorsa condivisa per gestire i topic
+    private TopicManager topicManager;
+
+    /**
+     * Costruttore della classe TopicInspector.
+     * 
+     * @param topicManager La risorsa condivisa TopicManager che gestisce i topic.
+     */
     public TopicInspector(TopicManager topicManager) {
         this.topicManager = topicManager;
     }
 
+    /**
+     * Metodo eseguito nel thread per avviare una sessione interattiva che permette
+     * di analizzare e modificare i messaggi di un topic.
+     */
     @Override
     public void run() {
+        // Scanner per l'input dell'utente
         Scanner scanner = new Scanner(System.in);
-        
-        // Chiede all'utente di inserire il nome del topic
-        System.out.println("Enter the topic you want to inspect:");
+
+        // Chiede all'utente di inserire il nome del topic da ispezionare
+        System.out.println("Inserisci il topic da ispezionare:");
         String topicName = scanner.nextLine();
 
-        // Ottieni il topic dal TopicManager
+        // Ottiene il topic dal TopicManager
         Optional<Topic> optionalTopic = topicManager.getTopicByName(topicName);
 
+        // Controlla se il topic esiste
         if (optionalTopic.isEmpty()) {
-            System.out.println("Topic not found.");
+            System.out.println("Topic non trovato.");
             return;
         }
 
-        Topic topic = optionalTopic.get();
-        boolean interactiveSession = true;
+        Topic topic = optionalTopic.get(); // Ottiene il topic
+        boolean interactiveSession = true; // Variabile per controllare la sessione interattiva
 
         // Sessione interattiva per l'analisi del topic
         while (interactiveSession) {
-            System.out.println("Enter a command (:listall, :delete <id>, :end):");
+            System.out.println("Comandi disponibili  >>  :listall / :delete <id> / :end");
             String command = scanner.nextLine();
-            
+
+            // Comando :listall per elencare tutti i messaggi nel topic
             if (command.startsWith(":listall")) {
-                // Comando per elencare tutti i messaggi nel topic
-                System.out.println("Listing all messages in the topic:");
                 List<Message> messages = topic.getAllMessagesAsList();
                 if (messages.isEmpty()) {
-                    System.out.println("No messages in this topic.");
+                    System.out.println("Sono stati inviati 0 messaggi per il topic " + topicName + ".");
                 } else {
+                    // Stampa il numero di messaggi
+                    System.out.println("Sono stati inviati " + messages.size() + " messaggi per il topic " + topicName + ".");
+                    // Stampa ogni messaggio
                     messages.forEach(System.out::println);
                 }
+
+                // Comando :delete per eliminare un messaggio con un determinato ID
             } else if (command.startsWith(":delete")) {
-                // Comando per eliminare un messaggio
                 String[] parts = command.split(" ");
                 if (parts.length < 2) {
-                    System.out.println("Please provide a valid message ID.");
+                    System.out.println("Inserisci un ID messaggio valido.");
                     continue;
                 }
 
+                // Prova a convertire l'ID in un numero intero e cancellare il messaggio
                 try {
                     int messageId = Integer.parseInt(parts[1]);
                     boolean deleted = topic.deleteMessageById(messageId);
                     if (deleted) {
-                        System.out.println("Message with ID " + messageId + " deleted.");
+                        System.out.println("Messaggio con ID " + messageId + " eliminato.");
                     } else {
-                        System.out.println("No message with ID " + messageId + " found.");
+                        System.out.println("Nessun messaggio con ID " + messageId + " trovato.");
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println("Invalid ID format. Please enter a valid number.");
+                    System.out.println("Formato ID non valido. Inserisci un numero valido.");
                 }
+
+                // Comando :end per terminare la sessione interattiva
             } else if (command.equals(":end")) {
-                // Comando per terminare la sessione
-                System.out.println("Ending the session...");
-                interactiveSession = false;
+                System.out.println("Terminazione della sessione...");
+                interactiveSession = false; // Termina la sessione
             } else {
-                System.out.println("Unknown command.");
+                // Comando non riconosciuto
+                System.out.println("Comando sconosciuto.");
             }
         }
 
-        // Chiusura risorse
+        // Chiusura delle risorse
         scanner.close();
     }
 }
