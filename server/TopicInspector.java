@@ -26,7 +26,7 @@ public class TopicInspector implements Runnable {
         Scanner scanner = new Scanner(System.in);
 
         // Chiede all'utente di inserire il nome del topic da ispezionare
-        System.out.println("Inserisci il topic da ispezionare:");
+        System.out.println("\nInserisci il topic da ispezionare:");
         String topicName = scanner.nextLine();
 
         // Ottiene il topic dal TopicManager
@@ -50,10 +50,10 @@ public class TopicInspector implements Runnable {
             if (command.startsWith(":listall")) {
                 List<Message> messages = topic.getAllMessagesAsList();
                 if (messages.isEmpty()) {
-                    System.out.println("Sono stati inviati 0 messaggi per il topic " + topicName + ".");
+                    System.out.println("\nSono stati inviati 0 messaggi per il topic " + topicName + ".");
                 } else {
                     // Stampa il numero di messaggi
-                    System.out.println("Sono stati inviati " + messages.size() + " messaggi per il topic " + topicName + ".");
+                    System.out.println("\nSono stati inviati " + messages.size() + " messaggi per il topic " + topicName + ".");
                     // Stampa ogni messaggio
                     messages.forEach(System.out::println);
                 }
@@ -71,17 +71,17 @@ public class TopicInspector implements Runnable {
                     int messageId = Integer.parseInt(parts[1]);
                     boolean deleted = topic.deleteMessageById(messageId);
                     if (deleted) {
-                        System.out.println("Messaggio con ID " + messageId + " eliminato.");
+                        System.out.println("\nMessaggio con ID " + messageId + " eliminato.");
                     } else {
-                        System.out.println("Nessun messaggio con ID " + messageId + " trovato.");
+                        System.out.println("\nNessun messaggio con ID " + messageId + " trovato.");
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println("Formato ID non valido. Inserisci un numero valido.");
+                    System.out.println("\nFormato ID non valido. Inserisci un numero valido.");
                 }
 
                 // Comando :end per terminare la sessione interattiva
             } else if (command.equals(":end")) {
-                System.out.println("Terminazione della sessione...");
+                System.out.println("\nTerminazione della sessione...");
                 interactiveSession = false; // Termina la sessione
             } else {
                 // Comando non riconosciuto

@@ -85,7 +85,6 @@ public class ClientHandler implements Runnable {
                                     },
                                     () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".") // Se non ci sono messaggi
                                 );
-                                toClient.println("Elenco dei messaggi per il topic " + topic);
                             } else {
                                 toClient.println("Comando sconosciuto. \n");
                             }
@@ -102,7 +101,6 @@ public class ClientHandler implements Runnable {
                                     },
                                     () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".")
                                 );
-                                toClient.println("ClientHandler: Elenco di tutti i messaggi per il topic " + topic);
                             } else {
                                 toClient.println("Comando sconosciuto. \n");
                             }
