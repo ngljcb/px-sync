@@ -5,3 +5,6 @@
 
 # Compiled class file
 *.class
+
+# ini files
+*.ini

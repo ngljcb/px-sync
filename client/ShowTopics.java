@@ -32,9 +32,6 @@ public class ShowTopics implements Runnable {
             // Scanner per ricevere i dati dal server
             Scanner fromServer = new Scanner(this.socket.getInputStream());
             String response;
-
-            // Stampa l'intestazione per la lista dei topic
-            System.out.println("Elenco dei topic disponibili: ");
             
             // Continua a leggere e stampare i topic finché non riceve il segnale di fine ("SHOWTOPICbreak")
             while (fromServer.hasNextLine()) {

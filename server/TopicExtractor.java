@@ -22,8 +22,13 @@ public class TopicExtractor implements Runnable {
         // Chiama la funzione getTopicNames() per ottenere la lista dei topic
         List<String> topicNames = topicManager.getTopicNames();
 
-        // Stampa tutti i topic ottenuti
-        System.out.println("Topics:");
-        topicNames.forEach(topic -> System.out.println(" - " + topic)); // Stampa ogni topic preceduto da un trattino
+        if(topicNames.size() == 0) {
+            System.out.println("Attualmente non ci sono topic disponibili. \n");
+        } else {
+            // Stampa tutti i topic ottenuti
+            System.out.println("Topics:");
+            topicNames.forEach(topic -> System.out.println(" - " + topic)); // Stampa ogni topic preceduto da un trattino
+            System.out.println("\n");
+        }
     }
 }
