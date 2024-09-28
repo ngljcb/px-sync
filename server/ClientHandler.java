@@ -9,9 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ClientHandler implements Runnable {
 
-    Socket socket;          // Socket per la comunicazione con il client
-    TopicManager resource;  // Risorsa condivisa per gestire i topic
-    BlockingQueue<String> requestQueue; // Coda per salvare le richieste in arrivo
+    Socket socket;                          // Socket per la comunicazione con il client
+    TopicManager resource;                  // Risorsa condivisa per gestire i topic
+    BlockingQueue<String> requestQueue;     // Coda per salvare le richieste in arrivo
+    private volatile boolean inspectorRunning;  // Variabile che indica se il TopicInspector è in esecuzione
 
     /**
      * Costruttore della classe ClientHandler.
@@ -23,6 +24,18 @@ public class ClientHandler implements Runnable {
         this.socket = socket;
         this.resource = resource;
         this.requestQueue = new LinkedBlockingQueue<>();  // Inizializza la coda delle richieste
+        this.inspectorRunning = false;                    // Inizialmente il TopicInspector non è in esecuzione
+    }
+
+    /**
+     * Metodo per impostare lo stato di esecuzione del TopicInspector.
+     */
+    public synchronized void setInspectorRunning(boolean running) {
+        this.inspectorRunning = running;
+        if (!running) {
+            System.out.println("Riprendi i ClientHandler, ispezione terminata.");
+            notifyAll(); // Risveglia tutti i thread in attesa quando inspectorRunning diventa false
+        }
     }
 
     /**
@@ -59,7 +72,8 @@ public class ClientHandler implements Runnable {
 
             while (!closed[0] && !Thread.currentThread().isInterrupted()) {
                 try {
-                    // Ottiene la prossima richiesta dalla coda
+                    
+                    // Ottiene la prossima richiesta dalla coda solo se il TopicInspector non è in esecuzione
                     String requestLine = requestQueue.take();
                     String[] parts = requestLine.split(" ", 3);
                     String request = parts[0];            // Tipo di richiesta (es. "publish", "subscribe", ecc.)
@@ -68,103 +82,114 @@ public class ClientHandler implements Runnable {
 
                     // Log della richiesta ricevuta
                     System.out.println("ClientHandler: tipo di richiesta: " + request);
-                    switch (request) {
-                        case "quit":
-                            // Gestione del comando "quit"
-                            closed[0] = true;
-                            System.out.println(this.toString() + " sta terminando...");
-                            break;
 
-                        case "publish":
-                            // Aggiunge un publisher al topic
-                            if (parts.length > 1) {                                
-                                this.resource.addPublisher(this, topic);
-                                toClient.println("Publisher aggiunto al topic " + topic);
-                            } else {
-                                toClient.println("Nessuna chiave specificata.");
-                            }
-                            break;
+                    // Sincronizzazione prima di eseguire il blocco switch
+                    synchronized (this) {
+                        while (inspectorRunning) {
+                            System.out.println("Il thread è in attesa, inspectorRunning: " + inspectorRunning);
+                            wait();  // Attende finché l'ispezione non termina
+                        }
 
-                        case "subscribe":
-                            // Aggiunge un subscriber al topic
-                            if (parts.length > 1) {
-                                this.resource.addSubscriber(this, topic);
-                                toClient.println("Subscriber aggiunto al topic " + topic);
-                            } else {
-                                toClient.println("Nessuna chiave specificata.");
-                            }
-                            break;
+                        // Switch sincronizzato
+                        switch (request) {
+                            case "quit":
+                                // Gestione del comando "quit"
+                                closed[0] = true;
+                                System.out.println(this.toString() + " sta terminando...");
+                                break;
 
-                        case "list":
-                            // Elenca i messaggi per un topic specifico
-                            if (parts.length > 1) {
-                                Optional<List<Message>> optionalMessages = this.resource.listMessages(this, topic);
-                                optionalMessages.ifPresentOrElse(
-                                    messages -> {
-                                        toClient.println("Messaggi:");
-                                        messages.forEach(toClient::println); // Stampa ogni messaggio
-                                    },
-                                    () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".") // Se non ci sono messaggi
-                                );
-                            } else {
-                                toClient.println("Comando sconosciuto. \n");
-                            }
-                            break;
+                            case "publish":
+                                // Aggiunge un publisher al topic
+                                if (parts.length > 1) {                                
+                                    this.resource.addPublisher(this, topic);
+                                    toClient.println("Publisher aggiunto al topic " + topic);
+                                } else {
+                                    toClient.println("Nessuna chiave specificata.");
+                                }
+                                break;
 
-                        case "listall":
-                            // Elenca tutti i messaggi del topic, indipendentemente dal publisher
-                            if (parts.length > 1) {
-                                Optional<List<Message>> optionalMessages = this.resource.listMessagesByTopic(topic);
-                                optionalMessages.ifPresentOrElse(
-                                    messages -> {
-                                        toClient.println("Sono stati inviati " + messages.size() + " messaggi per il topic " + topic + "."); 
-                                        messages.forEach(toClient::println); // Stampa ogni messaggio
-                                    },
-                                    () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".")
-                                );
-                            } else {
-                                toClient.println("Comando sconosciuto. \n");
-                            }
-                            break;
+                            case "subscribe":
+                                // Aggiunge un subscriber al topic
+                                if (parts.length > 1) {
+                                    this.resource.addSubscriber(this, topic);
+                                    toClient.println("Subscriber aggiunto al topic " + topic);
+                                } else {
+                                    toClient.println("Nessuna chiave specificata.");
+                                }
+                                break;
 
-                        case "send":
-                            // Invia un messaggio a tutti i subscriber di un topic
-                            if (parts.length > 1) {
-                                List<ClientHandler> subs = this.resource.publishMessage(this, topic, message);
+                            case "list":
+                                // Elenca i messaggi per un topic specifico
+                                if (parts.length > 1) {
+                                    Optional<List<Message>> optionalMessages = this.resource.listMessages(this, topic);
+                                    optionalMessages.ifPresentOrElse(
+                                        messages -> {
+                                            toClient.println("Messaggi:");
+                                            messages.forEach(toClient::println); // Stampa ogni messaggio
+                                        },
+                                        () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".") // Se non ci sono messaggi
+                                    );
+                                } else {
+                                    toClient.println("Comando sconosciuto. \n");
+                                }
+                                break;
+
+                            case "listall":
+                                // Elenca tutti i messaggi del topic, indipendentemente dal publisher
+                                if (parts.length > 1) {
+                                    Optional<List<Message>> optionalMessages = this.resource.listMessagesByTopic(topic);
+                                    optionalMessages.ifPresentOrElse(
+                                        messages -> {
+                                            toClient.println("Sono stati inviati " + messages.size() + " messaggi per il topic " + topic + "."); 
+                                            messages.forEach(toClient::println); // Stampa ogni messaggio
+                                        },
+                                        () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".")
+                                    );
+                                } else {
+                                    toClient.println("Comando sconosciuto. \n");
+                                }
+                                break;
+
+                            case "send":
+                                // Invia un messaggio a tutti i subscriber di un topic
+                                if (parts.length > 1) {
+                                    List<ClientHandler> subs = this.resource.publishMessage(this, topic, message);
+                                    
+                                    subs.forEach(s -> {
+                                        try {
+                                            PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
+                                            sender.println(message);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+                                    
+                                } else {
+                                    toClient.println("Comando sconosciuto. \n");
+                                }
+                                break;
+
+                            case "show":
+                                // Mostra tutti i topic disponibili
+                                List<String> topicNames = this.resource.getTopicNames();
                                 
-                                subs.forEach(s -> {
-                                    try {
-                                        PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
-                                        sender.println(message);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                });
-                                
-                            } else {
+                                if(topicNames.size() == 0) {
+                                    toClient.println("Attualmente non ci sono topic disponibili. \n");
+                                } else {
+                                    // Stampa tutti i topic ottenuti
+                                    toClient.println("Topics:");
+                                    topicNames.forEach(t -> toClient.println(" - " + t));
+                                    toClient.println("\n");
+                                }
+                                toClient.println("SHOWTOPICbreak");
+                                break;
+
+                            default:
+                                // Gestione di comando sconosciuto
                                 toClient.println("Comando sconosciuto. \n");
-                            }
-                            break;
-
-                        case "show":
-                            // Mostra tutti i topic disponibili
-                            List<String> topicNames = this.resource.getTopicNames();
-                            
-                            if(topicNames.size() == 0) {
-                                toClient.println("Attualmente non ci sono topic disponibili. \n");
-                            } else {
-                                // Stampa tutti i topic ottenuti
-                                toClient.println("Topics:");
-                                topicNames.forEach(t -> toClient.println(" - " + t));
-                                toClient.println("\n");
-                            }
-                            toClient.println("SHOWTOPICbreak");
-                            break;
-
-                        default:
-                            // Gestione di comando sconosciuto
-                            toClient.println("Comando sconosciuto. \n");
+                        }
                     }
+
                 } catch (InterruptedException e) {
                     System.out.println("Thread interrotto mentre attende richieste dal buffer.");
                     Thread.currentThread().interrupt();  // Reimposta il flag di interruzione
