@@ -70,7 +70,7 @@ public class SocketListener implements Runnable {
         }
 
         // Procedura per interrompere tutti i thread figli e chiudere i rispettivi socket
-        System.out.println("SocketListener: Interruzione dei client connessi...");
+        System.out.println("\n>>\n>>\n>>SocketListener: Interruzione dei client connessi... \n");
         for (Thread child : this.children.keySet()) {
             System.out.println("Interruzione del thread " + child + "...");
 
@@ -79,9 +79,11 @@ public class SocketListener implements Runnable {
 
             // Invia il messaggio "quit" al client tramite il socket
             try {
-                PrintWriter toClient = new PrintWriter(socket.getOutputStream(), true);
-                toClient.println("quit");  // Invia il messaggio di chiusura al client
-                toClient.close();
+                if(!socket.isClosed()) {
+                    PrintWriter toClient = new PrintWriter(socket.getOutputStream(), true);
+                    toClient.println("quit");  // Invia il messaggio di chiusura al client
+                    toClient.close();
+                }
             } catch (IOException e) {
                 // Gestione dell'errore durante l'invio del messaggio di chiusura
                 System.err.println("Errore nell'invio del messaggio 'quit' al client: " + e.getMessage());

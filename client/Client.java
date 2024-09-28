@@ -39,11 +39,10 @@ public class Client {
 
                         if (response.equals("quit")) {
                             System.out.println("\nErrore: Il server si è disconnesso.\n");
-                            System.out.println("Comandi disponibili >> quit");
+                            System.out.println("T-Client: Comandi disponibili >> quit");
 
                             // Interrompe eventuali thread attivi
                             if (activeThread[0] != null && activeThread[0].isAlive()) {
-                                System.out.println("sono qui");
                                 activeThread[0].interrupt();
                             }
 
@@ -69,7 +68,7 @@ public class Client {
                 // Aggiunta di una pausa di 2 secondi tra ogni iterazione
                 Thread.sleep(2000);
 
-                System.out.println("Comandi disponibili  >>  publish <topic> / subscribe <topic> / show / quit");
+                System.out.println("\nComandi disponibili  >>  publish <topic> / subscribe <topic> / show / quit");
                 String command = userInput.nextLine();
 
                 // Se il comando è "publish"
