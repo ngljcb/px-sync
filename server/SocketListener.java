@@ -9,6 +9,7 @@ public class SocketListener implements Runnable {
     ServerSocket server;                                // Il ServerSocket per ascoltare le connessioni in entrata
     TopicManager topicManager;                          // Risorsa condivisa per gestire i topic
     HashMap<Thread, Socket> children = new HashMap<>(); // Mappa di thread e socket associati ai client
+    HashMap<Thread, ClientHandler> clientHandlers = new HashMap<>(); // Mappa di thread e ClientHandler associati ai client
 
     /**
      * Costruttore per SocketListener.
@@ -34,37 +35,32 @@ public class SocketListener implements Runnable {
             while (!Thread.interrupted()) {
                 try {
                     // Attende la connessione di un nuovo client
-                    //System.out.println("SocketListener: In attesa di una connessione...");
                     Socket socket = this.server.accept();
 
-                    // Se il thread non è interrotto, crea un nuovo thread per gestire il client
                     if (!Thread.interrupted()) {
                         System.out.println("SocketListener: Client connesso \n");
 
-                        // Crea un nuovo thread per gestire il socket
-                        Thread handlerThread = new Thread(new ClientHandler(socket, topicManager));
+                        // Crea un nuovo ClientHandler e il relativo thread
+                        ClientHandler handler = new ClientHandler(socket, topicManager);
+                        Thread handlerThread = new Thread(handler);
                         handlerThread.start();
-                        
-                        // Aggiunge il thread e il socket alla mappa dei client connessi
+
+                        // Aggiungi il ClientHandler alla mappa dei client
                         this.children.put(handlerThread, socket);
+                        this.clientHandlers.put(handlerThread, handler); // Mappa il ClientHandler
                     } else {
-                        // Se il thread è interrotto, chiude il socket e esce
                         socket.close();
                         break;
                     }
                 } catch (SocketTimeoutException e) {
-                    // In caso di timeout, continua ad aspettare nuove connessioni
-                    //System.out.println("SocketListener: Timeout, continuando...");
                     continue;
                 } catch (IOException e) {
-                    // Gestione delle eccezioni di input/output
                     break;
                 }
             }
             // Chiude il server quando esce dal ciclo principale
             this.server.close();
         } catch (IOException e) {
-            // Gestione delle eccezioni di input/output
             System.err.println("SocketListener: IOException rilevata: " + e);
             e.printStackTrace();
         }
@@ -79,18 +75,28 @@ public class SocketListener implements Runnable {
 
             // Invia il messaggio "quit" al client tramite il socket
             try {
-                if(!socket.isClosed()) {
+                if (!socket.isClosed()) {
                     PrintWriter toClient = new PrintWriter(socket.getOutputStream(), true);
                     toClient.println("quit");  // Invia il messaggio di chiusura al client
                     toClient.close();
                 }
             } catch (IOException e) {
-                // Gestione dell'errore durante l'invio del messaggio di chiusura
                 System.err.println("Errore nell'invio del messaggio 'quit' al client: " + e.getMessage());
             }
 
             // Interrompe il thread
             child.interrupt();
+        }
+    }
+
+    /**
+     * Metodo per impostare la variabile `inspectorRunning` per tutti i ClientHandler attivi.
+     * 
+     * @param running Lo stato di `inspectorRunning` da impostare.
+     */
+    public void setInspectorRunningForAllClients(boolean running) {
+        for (ClientHandler handler : this.clientHandlers.values()) {
+            handler.setInspectorRunning(running);  // Aggiorna lo stato di `inspectorRunning` per ciascun ClientHandler
         }
     }
 }
