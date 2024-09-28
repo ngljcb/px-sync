@@ -29,11 +29,9 @@ public class Server {
             // Avvia il server sulla porta specificata
             ServerSocket server = new ServerSocket(port);
 
-            /*
-             * Avvia un thread separato per gestire le connessioni dei client.
-             * Il thread principale ascolta i comandi da tastiera dell'utente per la gestione del server.
-             */
-            Thread serverThread = new Thread(new SocketListener(server, topicManager));
+            // Crea e avvia il thread SocketListener per gestire i client
+            SocketListener socketListener = new SocketListener(server, topicManager); 
+            Thread serverThread = new Thread(socketListener);
             serverThread.start();
 
             String command = "";
@@ -55,27 +53,29 @@ public class Server {
                         // Attende che il thread TopicExtractor termini
                         topicExtractor.join();
                     } catch (InterruptedException e) {
-                        // Se il thread viene interrotto, termina il server
                         return;
                     }
 
                 // Se l'utente inserisce "inspect", avvia un thread per ispezionare un topic
                 } else if (command.startsWith("inspect")) {
-                    // Creiamo un CountDownLatch con conteggio 1 per sincronizzare i thread
                     CountDownLatch latch = new CountDownLatch(1);
 
-                    // Avvia il thread TopicInspector
+                    // Prima di eseguire l'ispezione, segnala a tutti i ClientHandler che l'ispezione è in corso
+                    socketListener.setInspectorRunningForAllClients(true);
+
                     Thread topicInspector = new Thread(new TopicInspector(topicManager, latch));
                     topicInspector.start();
 
                     try {
                         // Attende che TopicInspector completi il suo lavoro
-                        latch.await(); // Aspetta il completamento di TopicInspector
-                        topicInspector.join();  // Aggiunge il join per topicInspector
+                        latch.await();
+                        topicInspector.join();
                     } catch (InterruptedException e) {
-                        // Se il thread viene interrotto, termina il server
                         return;
                     }
+
+                    // Dopo che l'ispezione è completata, riprende l'esecuzione normale dei ClientHandler
+                    socketListener.setInspectorRunningForAllClients(false);
 
                 // Se l'utente inserisce "quit", esce dal ciclo principale
                 } else if (command.startsWith("quit")) {
@@ -90,19 +90,15 @@ public class Server {
             // Interrompe il thread che gestisce le connessioni client e attende la sua terminazione
             try {
                 serverThread.interrupt();
-                /* Attende la terminazione del thread SocketListener */
                 serverThread.join();
             } catch (InterruptedException e) {
-                // Se viene interrotto, termina il server
                 return;
             }
             System.out.println("Thread principale terminato.");
         } catch (IOException e) {
-            // Gestione dell'eccezione di input/output
             System.err.println("IOException rilevata: " + e);
             e.printStackTrace();
         } finally {
-            // Chiude l'input da tastiera
             userInput.close();
         }
     }
