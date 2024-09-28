@@ -48,8 +48,8 @@ public class Publisher implements Runnable {
                         
                         // Se il server invia il comando "quit", interrompe il ciclo
                         if (response.equals("quit")) {
-                            System.out.println("Il server si è disconnesso.");
-                            System.out.println("Comandi disponibili  >>  quit");
+                            System.out.println("T-Pub: Il server si è disconnesso.");
+                            System.out.println("T-Pub: Comandi disponibili  >>  quit");
                             quiting = true;
                             break;
                         }
@@ -79,7 +79,7 @@ public class Publisher implements Runnable {
 
                 if (!socket.isClosed()) {
                     // Mostra all'utente come usare il client
-                    System.out.println("Comandi disponibili  >>  send <message> / list / listall / quit");
+                    System.out.println("\nComandi disponibili  >>  send <message> / list / listall / quit");
                 } else {
                     // Mostra all'utente come usare il client
                     System.out.println("Comandi disponibili  >>  quit");

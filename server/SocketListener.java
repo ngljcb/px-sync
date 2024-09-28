@@ -70,7 +70,7 @@ public class SocketListener implements Runnable {
         }
 
         // Procedura per interrompere tutti i thread figli e chiudere i rispettivi socket
-        System.out.println("SocketListener: Interruzione dei client connessi...");
+        System.out.println("\n>>\n>>\n>>SocketListener: Interruzione dei client connessi... \n");
         for (Thread child : this.children.keySet()) {
             System.out.println("Interruzione del thread " + child + "...");
 

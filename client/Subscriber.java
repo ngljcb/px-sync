@@ -51,8 +51,8 @@ public class Subscriber implements Runnable {
 
                         // Se il server invia il comando "quit", interrompe il ciclo
                         if (response.equals("quit")) {
-                            System.out.println("Il server si è disconnesso.");
-                            System.out.println("Comandi disponibili  >>  quit");
+                            System.out.println("T-Sub: Il server si è disconnesso.");
+                            System.out.println("T-Sub: Comandi disponibili  >>  quit");
                             quiting = true;
                             break;
                         }
@@ -62,8 +62,8 @@ public class Subscriber implements Runnable {
                     fromServer.close();
                 } catch (Exception e) {
                     // Gestione dell'eccezione se la connessione al server viene persa
-                    System.out.println("Connessione al server persa.");
-                    System.out.println("Comandi disponibili  >>  quit");
+                    System.out.println("T-sub: Connessione al server persa.");
+                    System.out.println("T-sub: Comandi disponibili  >>  quit");
                 }
             });
 
@@ -82,7 +82,7 @@ public class Subscriber implements Runnable {
 
                 if (socket.isClosed()) {
                     // Mostra all'utente come usare il client
-                    System.out.println("Comandi disponibili  >>  quit");
+                    System.out.println("\nComandi disponibili  >>  quit");
                 }
 
                 // Legge il comando dell'utente da tastiera
