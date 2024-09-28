@@ -1,0 +1,8 @@
+La classe ShowTopics fornisce un modo per ottenere l'elenco dei topic disponibili.
+Il costruttore ShowTopics(Socket socket) utilizza un socket per comunicare con un server.
+Il metodo run() viene eseguito quando viene avviato un thread che esegue 'ShowTopics'. Inoltra la richiesta e ne stampa il contenuto.
+Implementazione:
+- Per l'invio della richiesta utilizza un oggetto 'PrintWriter' per inviare il comando 'show' al server, richiedendo la lista di tutti i topic.
+- Per la ricezione della risposta utilizza un oggetto Scanner, che consiste in una lista di topic.
+La risposta viene stampata riga per riga fino a che il server non ha più dati da inviare.
+Durante la comunicazione con il server, qualsiasi problema di I/O viene gestito (IOException)
