@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 public class Server {
 
@@ -38,11 +39,12 @@ public class Server {
             String command = "";
 
             // Flag per terminare il ciclo
-            boolean quiting = false;
+            boolean quitting = false;
 
             // Ciclo principale che accetta i comandi dall'utente
-            while (!quiting) {
+            while (!quitting) {
                 System.out.println("Comandi disponibili  >>  inspect / show / quit");
+
                 command = userInput.nextLine();
 
                 // Se l'utente inserisce "show", avvia un thread per estrarre tutti i topic
@@ -59,11 +61,17 @@ public class Server {
 
                 // Se l'utente inserisce "inspect", avvia un thread per ispezionare un topic
                 } else if (command.startsWith("inspect")) {
-                    Thread topicInspector = new Thread(new TopicInspector(topicManager));
+                    // Creiamo un CountDownLatch con conteggio 1 per sincronizzare i thread
+                    CountDownLatch latch = new CountDownLatch(1);
+
+                    // Avvia il thread TopicInspector
+                    Thread topicInspector = new Thread(new TopicInspector(topicManager, latch));
                     topicInspector.start();
+
                     try {
-                        // Attende che il thread TopicInspector termini
-                        topicInspector.join();
+                        // Attende che TopicInspector completi il suo lavoro
+                        latch.await(); // Aspetta il completamento di TopicInspector
+                        topicInspector.join();  // Aggiunge il join per topicInspector
                     } catch (InterruptedException e) {
                         // Se il thread viene interrotto, termina il server
                         return;
@@ -71,7 +79,7 @@ public class Server {
 
                 // Se l'utente inserisce "quit", esce dal ciclo principale
                 } else if (command.startsWith("quit")) {
-                    quiting = true;
+                    quitting = true;
 
                 // Se il comando non è riconosciuto, stampa un messaggio di errore
                 } else {
