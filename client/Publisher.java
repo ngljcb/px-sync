@@ -69,6 +69,14 @@ public class Publisher implements Runnable {
 
             // Gestisce l'input dell'utente nel thread principale
             while (!quiting) {
+                // Aggiunta di un ritardo di 2 secondi tra ogni iterazione del ciclo
+                try {
+                    Thread.sleep(2000);  // Pausa di 2 secondi
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+
                 if (!socket.isClosed()) {
                     // Mostra all'utente come usare il client
                     System.out.println("Comandi disponibili  >>  send <message> / list / listall / quit");

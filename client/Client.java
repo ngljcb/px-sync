@@ -1,106 +1,177 @@
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
+import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 
 public class Client {
 
-    /**
-     * Metodo principale che avvia il client e gestisce l'interazione con il server.
-     * 
-     * @param args Gli argomenti della riga di comando, dove args[0] rappresenta l'host
-     *             e args[1] rappresenta la porta del server a cui connettersi.
-     */
     public static void main(String[] args) {
-        // Verifica se gli argomenti host e porta sono stati forniti
         if (args.length < 2) {
             System.err.println("Uso corretto: java Client <host> <port>");
             return;
         }
 
-        // Ottiene l'host e la porta dai parametri della riga di comando
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
         try {
-            // Collegamento al server
             System.out.println("Connesso al server");
 
-            // Scanner per accettare input da tastiera
             Scanner userInput = new Scanner(System.in);
 
-            // Ciclo principale per gestire i comandi dell'utente
-            while (true) {
-                // Crea una connessione socket al server
-                Socket socket = new Socket(host, port);
+            // Usa un array di dimensione 1 per tracciare lo stato di "quit"
+            final boolean[] quit = {false};
 
-                // Mostra all'utente come usare il client
+            // Crea una connessione socket al server
+            Socket socket = new Socket(host, port);
+
+            // Variabili per tenere traccia dei thread attivi
+            final Thread[] activeThread = {null};  // Tiene traccia del thread Publisher o Subscriber attivo
+
+            // Thread separato per ascoltare i messaggi dal server
+            Thread serverListener = new Thread(() -> {
+                try {
+                    Scanner fromServer = new Scanner(socket.getInputStream());
+
+                    while (!Thread.currentThread().isInterrupted() && !quit[0] && fromServer.hasNextLine()) {
+                        String response = fromServer.nextLine();
+
+                        if (response.equals("quit")) {
+                            System.out.println("\nErrore: Il server si è disconnesso.\n");
+                            System.out.println("Comandi disponibili >> quit");
+
+                            // Interrompe eventuali thread attivi
+                            if (activeThread[0] != null && activeThread[0].isAlive()) {
+                                System.out.println("sono qui");
+                                activeThread[0].interrupt();
+                            }
+
+                            quit[0] = true;
+                            break;
+                        } else {
+                            System.out.println("Messaggio dal server: " + response);
+                        }
+                    }
+
+                    fromServer.close();
+                } catch (IOException e) {
+                    if (!Thread.currentThread().isInterrupted()) {
+                        System.out.println("Connessione al server persa.");
+                    }
+                }
+            });
+
+            serverListener.start();
+
+            // Ciclo principale per gestire i comandi dell'utente
+            while (!quit[0]) {
+                // Aggiunta di una pausa di 2 secondi tra ogni iterazione
+                Thread.sleep(2000);
+
                 System.out.println("Comandi disponibili  >>  publish <topic> / subscribe <topic> / show / quit");
                 String command = userInput.nextLine();
 
-                // Se il comando è "publish", avvia il thread Publisher
+                // Se il comando è "publish"
                 if (command.startsWith("publish ") && command.split(" ").length > 1) {
-                    Thread publisher = new Thread(new Publisher(socket, command.split(" ")[1]));
+                    if (serverListener.isAlive()) {
+                        serverListener.interrupt();
+                    }
+
+                    Socket publishSocket = new Socket(host, port);
+                    Thread publisher = new Thread(new Publisher(publishSocket, command.split(" ")[1]));
+                    activeThread[0] = publisher;
                     publisher.start();
+
                     try {
-                        // Attendi che il thread Publisher termini
                         publisher.join();
-                        break; // Esce dal ciclo dopo la pubblicazione
+                        quit[0] = true;
                     } catch (InterruptedException e) {
                         return;
                     }
-                } 
-                // Se il comando è "subscribe", avvia il thread Subscriber
+                }
+                // Se il comando è "subscribe"
                 else if (command.startsWith("subscribe ") && command.split(" ").length > 1) {
-                    Thread subscriber = new Thread(new Subscriber(socket, command.split(" ")[1]));
+                    if (serverListener.isAlive()) {
+                        serverListener.interrupt();
+                    }
+
+                    Socket subscribeSocket = new Socket(host, port);
+                    Thread subscriber = new Thread(new Subscriber(subscribeSocket, command.split(" ")[1]));
+                    activeThread[0] = subscriber;
                     subscriber.start();
+
                     try {
-                        // Attendi che il thread Subscriber termini
                         subscriber.join();
-                        break; // Esce dal ciclo dopo la sottoscrizione
+                        quit[0] = true;
                     } catch (InterruptedException e) {
                         return;
                     }
-                } 
-                // Se il comando è "show", avvia il thread ShowTopics
+                }
+                // Se il comando è "show"
                 else if (command.equals("show")) {
-                    // Creiamo un CountDownLatch con conteggio 1 per sincronizzare i thread
                     CountDownLatch latch = new CountDownLatch(1);
 
-                    // Creiamo e avviamo il thread ShowTopics per mostrare i topic
-                    Thread showtopics = new Thread(new ShowTopics(socket, latch));
+                    Socket showSocket = new Socket(host, port);
+                    Thread showtopics = new Thread(new ShowTopics(showSocket, latch));
                     showtopics.start();
 
                     try {
-                        // Attendere che ShowTopics completi il suo lavoro
+                        showtopics.join();  // Attende la terminazione di showtopics
                         latch.await();
                     } catch (InterruptedException e) {
                         return;
                     }
-                    // Ora il flusso torna a Client
-                } 
-                // Se il comando è "quit", interrompe la connessione
+                }
+                // Se il comando è "quit"
                 else if (command.equals("quit")) {
-                    System.out.println("Disconnessione dal server...");
-                    break;
-                } 
-                // Se il comando non è valido, mostra un messaggio di errore
+                    // Invia al server il comando "quit"
+                    if (!socket.isClosed()) {
+                        PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
+                        toServer.println("quit");
+                        System.out.println("Disconnessione dal server...");
+                    }
+
+                    // Interrompe eventuali thread attivi
+                    if (activeThread[0] != null && activeThread[0].isAlive()) {
+                        activeThread[0].interrupt();
+                        try {
+                            activeThread[0].join();  // Attende che il thread attivo termini
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    quit[0] = true;
+                }
+                // Comando sconosciuto
                 else {
                     System.out.println("Comando sconosciuto");
                 }
-
-                // Chiude il socket dopo aver eseguito il comando
-                socket.close();
             }
 
-            // Chiude le risorse usate dall'utente
+            // Chiude il socket
+            socket.close();
+
+            // Gestisce l'eccezione per il join del thread serverListener
+            try {
+                if (serverListener.isAlive()) {
+                    serverListener.interrupt();
+                    serverListener.join();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Chiude le risorse
             userInput.close();
             System.out.println("Client: Socket chiuso.");
 
         } catch (IOException e) {
-            // Gestione dell'errore di connessione al server
             System.err.println("Errore di connessione rilevato");
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            System.err.println("Thread interrotto: " + e.getMessage());
         }
     }
 }
