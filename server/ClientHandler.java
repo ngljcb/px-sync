@@ -124,10 +124,10 @@ public class ClientHandler implements Runnable {
                                     Optional<List<Message>> optionalMessages = this.resource.listMessages(this, topic);
                                     optionalMessages.ifPresentOrElse(
                                         messages -> {
-                                            toClient.println("Messaggi:");
+                                            toClient.println("\nMessaggi:");
                                             messages.forEach(toClient::println); // Stampa ogni messaggio
                                         },
-                                        () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".") // Se non ci sono messaggi
+                                        () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ". \n") // Se non ci sono messaggi
                                     );
                                 } else {
                                     toClient.println("Comando sconosciuto. \n");
@@ -140,10 +140,10 @@ public class ClientHandler implements Runnable {
                                     Optional<List<Message>> optionalMessages = this.resource.listMessagesByTopic(topic);
                                     optionalMessages.ifPresentOrElse(
                                         messages -> {
-                                            toClient.println("Sono stati inviati " + messages.size() + " messaggi per il topic " + topic + "."); 
+                                            toClient.println("Sono stati inviati " + messages.size() + " messaggi per il topic " + topic + ". \n"); 
                                             messages.forEach(toClient::println); // Stampa ogni messaggio
                                         },
-                                        () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ".")
+                                        () -> toClient.println("Sono stati inviati 0 messaggi per il topic " + topic + ". \n")
                                     );
                                 } else {
                                     toClient.println("Comando sconosciuto. \n");
@@ -158,7 +158,8 @@ public class ClientHandler implements Runnable {
                                     subs.forEach(s -> {
                                         try {
                                             PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
-                                            sender.println(message);
+                                            sender.println("\nMessaggio per il topic " + topic + ": " + message);
+                                            sender.println("\n\nComandi disponibili  >>  listall / quit");
                                         } catch (IOException e) {
                                             e.printStackTrace();
                                         }

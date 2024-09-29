@@ -37,8 +37,8 @@ public class Client {
                     while (!Thread.currentThread().isInterrupted() && !quit[0] && fromServer.hasNextLine()) {
                         String response = fromServer.nextLine();
 
-                        if (response.equals("quit")) {
-                            System.out.println("\nErrore: Il server si è disconnesso.\n");
+                        if (response.equals("quit") || socket.isClosed()) {
+                            System.out.println("\nErrore: Il server si è disconnesso.");
                             System.out.println("T-Client: Comandi disponibili >> quit");
 
                             // Interrompe eventuali thread attivi
