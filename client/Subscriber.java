@@ -39,9 +39,6 @@ public class Subscriber implements Runnable {
                 try {
                     // Scanner per ricevere i dati dal server
                     Scanner fromServer = new Scanner(this.socket.getInputStream());
-
-                    // System.out.println(response);
-                    System.out.println("\nMessaggi per il topic " + this.topic + ":");
                     
                     // Continua a leggere messaggi dal server finché il subscriber non termina
                     while (!quiting) {
@@ -50,9 +47,7 @@ public class Subscriber implements Runnable {
                         String response = fromServer.nextLine();
 
                         // Se il server invia il comando "quit", interrompe il ciclo
-                        if (response.equals("quit")) {
-                            System.out.println("T-Sub: Il server si è disconnesso.");
-                            System.out.println("T-Sub: Comandi disponibili  >>  quit");
+                        if (response.equals("quit") || this.socket.isClosed()) {
                             quiting = true;
                             break;
                         }
@@ -73,14 +68,17 @@ public class Subscriber implements Runnable {
             // Gestisce l'input dell'utente nel thread principale
             while (!quiting) {
                  // Aggiunta di un ritardo di 2 secondi tra ogni iterazione del ciclo
-                 try {
+                try {
                     Thread.sleep(2000);  // Pausa di 2 secondi
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
 
-                if (socket.isClosed()) {
+                if (!socket.isClosed()) {
+                    // Mostra all'utente come usare il client
+                    System.out.println("\nComandi disponibili  >>  listall / quit");
+                } else {
                     // Mostra all'utente come usare il client
                     System.out.println("\nComandi disponibili  >>  quit");
                 }
@@ -88,7 +86,12 @@ public class Subscriber implements Runnable {
                 // Legge il comando dell'utente da tastiera
                 String request = userInput.nextLine();
 
-                if (request.equals("quit")) {
+                // Comando "listall": richiede la lista di tutti i messaggi nel topic
+                if (!socket.isClosed() && request.equals("listall")) {
+                    toServer.println("listall " + this.topic);
+
+                // Comando "quit": invia la richiesta di disconnessione al server
+                } else if (request.equals("quit")) {
                     if (!socket.isClosed()) {
                         toServer.println("quit");
                     }
