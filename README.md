@@ -1,19 +1,84 @@
 # Publish/Subscribe Messaging System
 
-### Summary
+**Summary**  
+This project implements a publish/subscribe messaging system using Java sockets, following a client-server architecture. Multiple clients can connect to a central server to interact as either publishers or subscribers. Publishers send messages to specific topics, while subscribers receive messages from the topics they are subscribed to. The server manages topics, clients, and ensures proper message flow with a focus on concurrency and synchronization.
 
-This project implements a basic publish/subscribe messaging system using Java. The system allows multiple clients to connect to a server and interact through different roles: **publishers** and **subscribers**. Publishers can send messages to specific topics, while subscribers receive messages from the topics they are subscribed to.
+**Objectives**  
+- **Client-Server Architecture**: Implement a server that handles multiple client connections using Java sockets.
+- **Publish/Subscribe Model**: Facilitate dynamic topic creation, publication of messages, and topic subscriptions.
+- **Topic Management**: Automatically create and manage topics based on client interactions.
+- **Concurrency Handling**: Ensure the system operates correctly under concurrent client connections and interactions.
+- **Server Administration**: Provide server-side commands for inspecting and managing topics and messages.
 
-### Objectives
+**Features**  
+- Clients can publish messages to topics or subscribe to receive updates from topics.
+- Topics are dynamically created when clients publish to or subscribe to new topics.
+- The server offers administrative commands for inspecting topics and messages, and even allows for message deletion.
+- Threading and concurrency are efficiently managed to allow multiple clients to connect and interact with the system simultaneously.
+- Synchronization mechanisms such as `synchronized` blocks, `wait/notifyAll`, and `CountDownLatch` are used to ensure safe access to shared resources by multiple clients, avoiding race conditions.
+- The system uses Java's socket programming to facilitate client-server communication, ensuring robust message exchange over a network.
+- The server controls prevent message loss or duplication during concurrent access, ensuring messages are delivered to the correct subscribers.
 
-- **Client-Server Architecture**: Implement a server that handles multiple client connections using sockets.
-- **Publish/Subscribe Model**: Enable clients to publish messages to and subscribe to topics dynamically.
-- **Topic Management**: Automatically create and manage topics based on client requests.
-- **Concurrency Handling**: Ensure correct operation of the system under concurrent client interactions.
-- **Server Administration**: Provide server-side commands to inspect and manage topics and messages.
+**Concurrency Programming Techniques**  
+The system uses advanced concurrency programming techniques to handle multiple clients interacting concurrently. Each client has its own thread using the `ClientHandler` class. The `TopicManager` handles shared resources like topics and messages, with synchronization ensuring safe access. Techniques like `BlockingQueue` and `CountDownLatch` are used for thread communication and managing tasks. This ensures that all clients can publish, subscribe, and interact without conflicts or data inconsistencies.
 
-### Features
+**Code Structure**  
+- **Server**: Manages client connections, topics, and message flow between clients.
+- **Client**: Clients connect to the server to either publish messages or subscribe to topics.
+- **TopicManager**: Central component for managing topics and coordinating messages between publishers and subscribers.
+- **ClientHandler**: Manages each client’s interaction with the server and processes requests.
+- **Message**: Represents individual messages within a topic, including metadata like timestamps and publisher info.
 
-- Clients can publish and subscribe to topics.
-- Server can inspect and manage topics, including message deletion.
-- Concurrency is handled to allow multiple clients to interact with the system simultaneously.
+**Usage Instructions**
+
+1. **Project Structure**  
+   The project is divided into two folders: `client` and `server`.
+
+2. **Compilation**  
+   Navigate to the appropriate folder (`client` or `server`) and use the following command to compile the Java files:
+   ```bash
+   javac *.java
+   ```
+
+3. **Starting the Server**  
+   To start the server, run the following command from the `server` directory:
+   ```bash
+   java Server <port>
+   ```
+   Example:
+   ```bash
+   java Server 12345
+   ```
+
+4. **Running the Client**  
+   To run a client, execute the following command from the `client` directory:
+   ```bash
+   java Client <host> <port>
+   ```
+   Example:
+   ```bash
+   java Client localhost 12345
+   ```
+
+5. **Client Commands**  
+   Once connected, clients can issue the following commands:
+   - `publish <topic>`: Publish messages to a specific topic.
+   - `send <message>`: After choosing a topic, publish a message to it.
+   - `subscribe <topic>`: Subscribe to a topic to receive updates.
+   - `list`: List messages you’ve published to a topic.
+   - `listall`: List all messages in a topic.
+   - `show`: Request a list of available topics from the server.
+   - `quit`: Disconnect from the server.
+
+6. **Server Administration Commands**  
+   The server accepts administrative commands directly from the console:
+   - `show`: Displays all available topics.
+   - `inspect <topic>`: Inspect messages in a specific topic.
+   - `quit`: Shuts down the server gracefully.
+
+
+
+<br>
+
+** **  
+This project is an implementation of a real-time messaging system using a client-server architecture via Java sockets. The publish/subscribe model is handled effectively, with a strong emphasis on concurrency control using synchronization techniques. The use of Java socket programming ensures robust communication between clients and the server. The design handles concurrent client interactions with efficiency, ensuring that the messaging system scales well with multiple users.
