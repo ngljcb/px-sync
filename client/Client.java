@@ -15,16 +15,15 @@ public class Client {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
-        try {
-            System.out.println("Connesso al server");
-
+        try {            
             Scanner userInput = new Scanner(System.in);
-
+            
             // Usa un array di dimensione 1 per tracciare lo stato di "quit"
             final boolean[] quit = {false};
-
+            
             // Crea una connessione socket al server
             Socket socket = new Socket(host, port);
+            System.out.println("Connesso al server");
 
             // Variabili per tenere traccia dei thread attivi
             final Thread[] activeThread = {null};  // Tiene traccia del thread Publisher o Subscriber attivo
@@ -39,7 +38,7 @@ public class Client {
 
                         if (response.equals("quit") || socket.isClosed()) {
                             System.out.println("\nErrore: Il server si è disconnesso.");
-                            System.out.println("T-Client: Comandi disponibili >> quit");
+                            System.out.println("Comandi disponibili  >>  quit");
 
                             // Interrompe eventuali thread attivi
                             if (activeThread[0] != null && activeThread[0].isAlive()) {
@@ -164,7 +163,7 @@ public class Client {
 
             // Chiude le risorse
             userInput.close();
-            System.out.println("Client: Socket chiuso.");
+            System.out.println("\n\n>> Client terminato.");
 
         } catch (IOException e) {
             System.err.println("Errore di connessione rilevato");

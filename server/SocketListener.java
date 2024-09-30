@@ -10,6 +10,7 @@ public class SocketListener implements Runnable {
     TopicManager topicManager;                          // Risorsa condivisa per gestire i topic
     HashMap<Thread, Socket> children = new HashMap<>(); // Mappa di thread e socket associati ai client
     HashMap<Thread, ClientHandler> clientHandlers = new HashMap<>(); // Mappa di thread e ClientHandler associati ai client
+    private volatile boolean inspectorRunning;  // Variabile che indica se il TopicInspector è in esecuzione
 
     /**
      * Costruttore per SocketListener.
@@ -20,6 +21,7 @@ public class SocketListener implements Runnable {
     public SocketListener(ServerSocket server, TopicManager topicManager) {
         this.server = server;
         this.topicManager = topicManager;
+        this.inspectorRunning = false;
     }
 
     /**
@@ -38,10 +40,9 @@ public class SocketListener implements Runnable {
                     Socket socket = this.server.accept();
 
                     if (!Thread.interrupted()) {
-                        System.out.println("SocketListener: Client connesso \n");
 
                         // Crea un nuovo ClientHandler e il relativo thread
-                        ClientHandler handler = new ClientHandler(socket, topicManager);
+                        ClientHandler handler = new ClientHandler(socket, topicManager, inspectorRunning);
                         Thread handlerThread = new Thread(handler);
                         handlerThread.start();
 
@@ -66,9 +67,9 @@ public class SocketListener implements Runnable {
         }
 
         // Procedura per interrompere tutti i thread figli e chiudere i rispettivi socket
-        System.out.println("\n>>\n>>\n>>SocketListener: Interruzione dei client connessi... \n");
+        System.out.println("\n>>\n>>\n>>Interruzione dei client connessi... \n");
         for (Thread child : this.children.keySet()) {
-            System.out.println("Interruzione del thread " + child + "...");
+            System.out.println("Interruzione del " + child + "...");
 
             // Ottiene il socket associato al thread
             Socket socket = this.children.get(child);
@@ -95,6 +96,7 @@ public class SocketListener implements Runnable {
      * @param running Lo stato di `inspectorRunning` da impostare.
      */
     public void setInspectorRunningForAllClients(boolean running) {
+        this.inspectorRunning = running;
         for (ClientHandler handler : this.clientHandlers.values()) {
             handler.setInspectorRunning(running);  // Aggiorna lo stato di `inspectorRunning` per ciascun ClientHandler
         }
