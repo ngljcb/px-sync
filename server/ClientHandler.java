@@ -20,11 +20,11 @@ public class ClientHandler implements Runnable {
      * @param socket Il socket che rappresenta la connessione con il client.
      * @param resource La risorsa condivisa TopicManager che gestisce i topic.
      */
-    public ClientHandler(Socket socket, TopicManager resource) {
+    public ClientHandler(Socket socket, TopicManager resource, boolean inspectorRunning) {
         this.socket = socket;
         this.resource = resource;
         this.requestQueue = new LinkedBlockingQueue<>();  // Inizializza la coda delle richieste
-        this.inspectorRunning = false;                    // Inizialmente il TopicInspector non è in esecuzione
+        this.inspectorRunning = inspectorRunning;         // Inizialmente il TopicInspector non è in esecuzione
     }
 
     /**
@@ -33,7 +33,6 @@ public class ClientHandler implements Runnable {
     public synchronized void setInspectorRunning(boolean running) {
         this.inspectorRunning = running;
         if (!running) {
-            System.out.println("Riprendi i ClientHandler, ispezione terminata.");
             notifyAll(); // Risveglia tutti i thread in attesa quando inspectorRunning diventa false
         }
     }
@@ -49,10 +48,14 @@ public class ClientHandler implements Runnable {
             // PrintWriter per inviare i dati al client
             PrintWriter toClient = new PrintWriter(this.socket.getOutputStream(), true);
 
-            // Messaggio di avvio thread
-            System.out.println("Thread " + Thread.currentThread() + " in ascolto...");
+            if(!inspectorRunning) {
+                // Messaggio di avvio thread
+                System.out.println("\n"+ Thread.currentThread() + " in ascolto...\n");
+                System.out.println("Comandi disponibili  >>  inspect / show / quit");
+            }
 
-            final boolean[] closed = {false}; // Usa un array booleano per gestire la chiusura
+            // Usa un array booleano per gestire la chiusura
+            final boolean[] closed = {false};
 
             // Thread separato per leggere le richieste dal client e inserirle nella coda
             Thread requestReader = new Thread(() -> {
@@ -62,7 +65,6 @@ public class ClientHandler implements Runnable {
                         requestQueue.put(requestLine);  // Aggiunge la richiesta alla coda
                     }
                 } catch (InterruptedException e) {
-                    System.out.println("Thread interrotto mentre attende richieste dal client.");
                     Thread.currentThread().interrupt();  // Reimposta il flag di interruzione
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -79,16 +81,17 @@ public class ClientHandler implements Runnable {
                     String request = parts[0];            // Tipo di richiesta (es. "publish", "subscribe", ecc.)
                     String topic = parts.length > 1 ? parts[1] : "";  // Nome del topic (se presente)
                     String message = parts.length > 2 ? parts[2] : "";  // Messaggio (se presente)
-
-                    // Log della richiesta ricevuta
-                    System.out.println("ClientHandler: tipo di richiesta: " + request);
-
+                    
                     // Sincronizzazione prima di eseguire il blocco switch
                     synchronized (this) {
                         while (inspectorRunning) {
-                            System.out.println("Il thread è in attesa, inspectorRunning: " + inspectorRunning);
+                            //System.out.println("Il thread è in attesa, inspectorRunning: " + inspectorRunning);
                             wait();  // Attende finché l'ispezione non termina
                         }
+
+                        // Log della richiesta ricevuta
+                        System.out.println("\nArrivato una richiesta: " + request);
+                        System.out.println("Comandi disponibili  >>  inspect / show / quit");
 
                         // Switch sincronizzato
                         switch (request) {
@@ -192,7 +195,6 @@ public class ClientHandler implements Runnable {
                     }
 
                 } catch (InterruptedException e) {
-                    System.out.println("Thread interrotto mentre attende richieste dal buffer.");
                     Thread.currentThread().interrupt();  // Reimposta il flag di interruzione
                     break;  // Uscita dal ciclo
                 }
@@ -207,7 +209,6 @@ public class ClientHandler implements Runnable {
             toClient.close();
             fromClient.close();
             this.socket.close();
-            System.out.println("Connessione chiusa.");
 
         } catch(IOException e) {
             // Gestione delle eccezioni di input/output

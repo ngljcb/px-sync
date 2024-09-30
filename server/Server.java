@@ -76,6 +76,7 @@ public class Server {
 
                     // Dopo che l'ispezione è completata, riprende l'esecuzione normale dei ClientHandler
                     socketListener.setInspectorRunningForAllClients(false);
+                    System.out.println("Riprendi i ClientHandler, ispezione terminata.");
 
                 // Se l'utente inserisce "quit", esce dal ciclo principale
                 } else if (command.startsWith("quit")) {
@@ -94,7 +95,7 @@ public class Server {
             } catch (InterruptedException e) {
                 return;
             }
-            System.out.println("Thread principale terminato.");
+            System.out.println("\n\n>> Server terminato.");
         } catch (IOException e) {
             System.err.println("IOException rilevata: " + e);
             e.printStackTrace();
