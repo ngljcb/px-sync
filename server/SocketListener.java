@@ -95,7 +95,7 @@ public class SocketListener implements Runnable {
      * 
      * @param running Lo stato di `inspectorRunning` da impostare.
      */
-    public void setInspectorRunningForAllClients(boolean running) {
+    public synchronized void setInspectorRunningForAllClients(boolean running) {
         this.inspectorRunning = running;
         for (ClientHandler handler : this.clientHandlers.values()) {
             handler.setInspectorRunning(running);  // Aggiorna lo stato di `inspectorRunning` per ciascun ClientHandler
