@@ -159,6 +159,8 @@ public class ClientHandler implements Runnable {
                                     List<ClientHandler> subs = this.resource.publishMessage(this, topic, message);
                                     
                                     subs.forEach(s -> {
+                                    // Sincronizza l'invio del messaggio per ogni subscriber
+                                    synchronized (s) {
                                         try {
                                             PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
                                             sender.println("\nMessaggio per il topic " + topic + ": " + message);
@@ -166,6 +168,7 @@ public class ClientHandler implements Runnable {
                                         } catch (IOException e) {
                                             e.printStackTrace();
                                         }
+                                    }
                                     });
                                     
                                 } else {
