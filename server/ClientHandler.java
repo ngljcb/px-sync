@@ -12,7 +12,7 @@ public class ClientHandler implements Runnable {
     Socket socket;                          // Socket per la comunicazione con il client
     TopicManager resource;                  // Risorsa condivisa per gestire i topic
     BlockingQueue<String> requestQueue;     // Coda per salvare le richieste in arrivo
-    private volatile boolean inspectorRunning;  // Variabile che indica se il TopicInspector è in esecuzione
+    private volatile String inspectedTopic;  // Variabile che indica se il TopicInspector è in esecuzione
 
     /**
      * Costruttore della classe ClientHandler.
@@ -20,19 +20,19 @@ public class ClientHandler implements Runnable {
      * @param socket Il socket che rappresenta la connessione con il client.
      * @param resource La risorsa condivisa TopicManager che gestisce i topic.
      */
-    public ClientHandler(Socket socket, TopicManager resource, boolean inspectorRunning) {
+    public ClientHandler(Socket socket, TopicManager resource, String inspectedTopic) {
         this.socket = socket;
         this.resource = resource;
         this.requestQueue = new LinkedBlockingQueue<>();  // Inizializza la coda delle richieste
-        this.inspectorRunning = inspectorRunning;         // Inizialmente il TopicInspector non è in esecuzione
+        this.inspectedTopic = inspectedTopic;             // Inizialmente il TopicInspector non è in esecuzione
     }
 
     /**
      * Metodo per impostare lo stato di esecuzione del TopicInspector.
      */
-    public synchronized void setInspectorRunning(boolean running) {
-        this.inspectorRunning = running;
-        if (!running) {
+    public synchronized void setInspectorRunning(String topic) {
+        this.inspectedTopic = topic;
+        if (inspectedTopic.isEmpty()) {
             notifyAll(); // Risveglia tutti i thread in attesa quando inspectorRunning diventa false
         }
     }
@@ -48,10 +48,10 @@ public class ClientHandler implements Runnable {
             // PrintWriter per inviare i dati al client
             PrintWriter toClient = new PrintWriter(this.socket.getOutputStream(), true);
 
-            if(!inspectorRunning) {
+            if(inspectedTopic.isEmpty()) {
                 // Messaggio di avvio thread
-                System.out.println("\n"+ Thread.currentThread() + " in ascolto...\n");
-                System.out.println("Comandi disponibili  >>  inspect / show / quit");
+                System.out.println(Thread.currentThread() + " in ascolto...");
+                //System.out.println("Comandi disponibili  >>  inspect / show / quit");
             }
 
             // Usa un array booleano per gestire la chiusura
@@ -84,14 +84,17 @@ public class ClientHandler implements Runnable {
                     
                     // Sincronizzazione prima di eseguire il blocco switch
                     synchronized (this) {
-                        while (inspectorRunning) {
+                        while (!topic.isEmpty() && inspectedTopic.equals(topic)) {
                             //System.out.println("Il thread è in attesa, inspectorRunning: " + inspectorRunning);
                             wait();  // Attende finché l'ispezione non termina
                         }
 
-                        // Log della richiesta ricevuta
-                        System.out.println("\nArrivato una richiesta: " + request);
-                        System.out.println("Comandi disponibili  >>  inspect / show / quit");
+                        // Se l'ispezione è attivo, non stampo i seguenti messaggi sul console
+                        if(inspectedTopic.equals("")) {
+                            // Log della richiesta ricevuta
+                            System.out.println("\nArrivato una richiesta: " + request);
+                            System.out.println("Comandi disponibili  >>  inspect / show / quit");
+                        }
 
                         // Switch sincronizzato
                         switch (request) {
@@ -164,7 +167,7 @@ public class ClientHandler implements Runnable {
                                         try {
                                             PrintWriter sender = new PrintWriter(s.socket.getOutputStream(), true);
                                             sender.println("\nMessaggio per il topic " + topic + ": " + message);
-                                            sender.println("\n\nComandi disponibili  >>  listall / quit");
+                                            //sender.println("\n\nComandi disponibili  >>  listall / quit");
                                         } catch (IOException e) {
                                             e.printStackTrace();
                                         }

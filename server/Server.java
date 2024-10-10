@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
+import java.util.Optional;
 
 public class Server {
 
@@ -59,26 +60,39 @@ public class Server {
                     }
 
                 // Se l'utente inserisce "inspect", avvia un thread per ispezionare un topic
-                } else if (command.startsWith("inspect")) {
-                    CountDownLatch latch = new CountDownLatch(1);
+                } else if (command.equals("inspect")) {
+                    
+                    System.out.println("\nInserisci il topic da ispezionare:");
+                    String topicName = userInput.nextLine();
 
-                    // Prima di eseguire l'ispezione, segnala a tutti i ClientHandler che l'ispezione è in corso
-                    socketListener.setInspectorRunningForAllClients(true);
+                    Optional<Topic> optionalTopic = topicManager.getTopicByName(topicName);
 
-                    Thread topicInspector = new Thread(new TopicInspector(topicManager, latch));
-                    topicInspector.start();
-
-                    try {
-                        // Attende che TopicInspector completi il suo lavoro
-                        latch.await();
-                        topicInspector.join();
-                    } catch (InterruptedException e) {
-                        return;
+                    if (optionalTopic.isEmpty()) {
+                        System.out.println("Errore: Topic non trovato. \n");
+                    } else {
+                        
+                        CountDownLatch latch = new CountDownLatch(1);
+    
+                        // Prima di eseguire l'ispezione, segnala a tutti i ClientHandler che l'ispezione è in corso
+                        socketListener.setInspectorRunningForAllClients(topicName);
+    
+                        Thread topicInspector = new Thread(new TopicInspector(topicManager, latch, topicName));
+                        topicInspector.start();
+    
+                        try {
+                            // Attende che TopicInspector completi il suo lavoro
+                            latch.await();
+                            topicInspector.join();
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+    
+                        topicName = "";
+    
+                        // Dopo che l'ispezione è completata, riprende l'esecuzione normale dei ClientHandler
+                        socketListener.setInspectorRunningForAllClients(topicName);
+                        System.out.println("Riprendi i ClientHandler, ispezione terminata.");
                     }
-
-                    // Dopo che l'ispezione è completata, riprende l'esecuzione normale dei ClientHandler
-                    socketListener.setInspectorRunningForAllClients(false);
-                    System.out.println("Riprendi i ClientHandler, ispezione terminata.");
 
                 // Se l'utente inserisce "quit", esce dal ciclo principale
                 } else if (command.startsWith("quit")) {
