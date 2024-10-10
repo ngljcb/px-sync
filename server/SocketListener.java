@@ -10,7 +10,7 @@ public class SocketListener implements Runnable {
     TopicManager topicManager;                          // Risorsa condivisa per gestire i topic
     HashMap<Thread, Socket> children = new HashMap<>(); // Mappa di thread e socket associati ai client
     HashMap<Thread, ClientHandler> clientHandlers = new HashMap<>(); // Mappa di thread e ClientHandler associati ai client
-    private volatile boolean inspectorRunning;  // Variabile che indica se il TopicInspector è in esecuzione
+    private volatile String inspectedTopic;           // Variabile che indica se il TopicInspector è in esecuzione sul topic specificato
 
     /**
      * Costruttore per SocketListener.
@@ -21,7 +21,7 @@ public class SocketListener implements Runnable {
     public SocketListener(ServerSocket server, TopicManager topicManager) {
         this.server = server;
         this.topicManager = topicManager;
-        this.inspectorRunning = false;
+        this.inspectedTopic = "";
     }
 
     /**
@@ -42,7 +42,7 @@ public class SocketListener implements Runnable {
                     if (!Thread.interrupted()) {
 
                         // Crea un nuovo ClientHandler e il relativo thread
-                        ClientHandler handler = new ClientHandler(socket, topicManager, inspectorRunning);
+                        ClientHandler handler = new ClientHandler(socket, topicManager, inspectedTopic);
                         Thread handlerThread = new Thread(handler);
                         handlerThread.start();
 
@@ -95,10 +95,10 @@ public class SocketListener implements Runnable {
      * 
      * @param running Lo stato di `inspectorRunning` da impostare.
      */
-    public synchronized void setInspectorRunningForAllClients(boolean running) {
-        this.inspectorRunning = running;
+    public synchronized void setInspectorRunningForAllClients(String topic) {
+        this.inspectedTopic = topic;
         for (ClientHandler handler : this.clientHandlers.values()) {
-            handler.setInspectorRunning(running);  // Aggiorna lo stato di `inspectorRunning` per ciascun ClientHandler
+            handler.setInspectorRunning(topic);  // Aggiorna lo stato di `inspectorRunning` per ciascun ClientHandler
         }
     }
 }
