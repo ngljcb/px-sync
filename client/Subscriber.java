@@ -74,14 +74,13 @@ public class Subscriber implements Runnable {
                     e.printStackTrace();
                 }
 
-
-                if (!socket.isClosed()) {
-                    // Mostra all'utente come usare il client
-                    System.out.println("\nComandi disponibili  >>  listall / quit");
-                } else {
-                    // Mostra all'utente come usare il client
-                    System.out.println("\nComandi disponibili  >>  quit");
-                }
+                // if (!socket.isClosed()) {
+                //     // Mostra all'utente come usare il client
+                //     System.out.println("\nComandi disponibili  >>  listall / quit");
+                // } else {
+                //     // Mostra all'utente come usare il client
+                //     System.out.println("\nComandi disponibili  >>  quit");
+                // }
 
                 // Legge il comando dell'utente da tastiera
                 String request = userInput.nextLine();

@@ -18,6 +18,8 @@ public class Server {
             return;
         }
 
+        System.out.println("\nAvviato il server. \n\n");
+
         // Ottiene la porta dalla riga di comando
         int port = Integer.parseInt(args[0]);
         Scanner userInput = new Scanner(System.in);
