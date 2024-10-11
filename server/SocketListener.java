@@ -3,14 +3,14 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SocketListener implements Runnable {
-    ServerSocket server;                                // Il ServerSocket per ascoltare le connessioni in entrata
-    TopicManager topicManager;                          // Risorsa condivisa per gestire i topic
-    HashMap<Thread, Socket> children = new HashMap<>(); // Mappa di thread e socket associati ai client
-    HashMap<Thread, ClientHandler> clientHandlers = new HashMap<>(); // Mappa di thread e ClientHandler associati ai client
-    private volatile String inspectedTopic;           // Variabile che indica se il TopicInspector è in esecuzione sul topic specificato
+    ServerSocket server;                                        // Il ServerSocket per ascoltare le connessioni in entrata
+    TopicManager topicManager;                                  // Risorsa condivisa per gestire i topic
+    ConcurrentHashMap<Thread, Socket> children;                 // Mappa di thread e socket associati ai client
+    ConcurrentHashMap<Thread, ClientHandler> clientHandlers;    // Mappa di thread e ClientHandler associati ai client
+    private volatile String inspectedTopic;                     // Variabile che indica se il TopicInspector è in esecuzione sul topic specificato
 
     /**
      * Costruttore per SocketListener.
@@ -22,6 +22,8 @@ public class SocketListener implements Runnable {
         this.server = server;
         this.topicManager = topicManager;
         this.inspectedTopic = "";
+        this.children = new ConcurrentHashMap<>();
+        this.clientHandlers = new ConcurrentHashMap<>();
     }
 
     /**
@@ -48,7 +50,11 @@ public class SocketListener implements Runnable {
 
                         // Aggiungi il ClientHandler alla mappa dei client
                         this.children.put(handlerThread, socket);
-                        this.clientHandlers.put(handlerThread, handler); // Mappa il ClientHandler
+
+                        synchronized(this) {
+                            this.clientHandlers.put(handlerThread, handler); // Mappa il ClientHandler
+                        }
+                        
                     } else {
                         socket.close();
                         break;
