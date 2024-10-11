@@ -191,7 +191,6 @@ public class ClientHandler implements Runnable {
                                     topicNames.forEach(t -> toClient.println(" - " + t));
                                     toClient.println("\n");
                                 }
-                                toClient.println("SHOWTOPICbreak");
                                 break;
 
                             default:

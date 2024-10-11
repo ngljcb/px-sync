@@ -48,7 +48,7 @@ public class Client {
                             quit[0] = true;
                             break;
                         } else {
-                            System.out.println("Messaggio dal server: " + response);
+                            System.out.println(response);
                         }
                     }
 
@@ -62,6 +62,8 @@ public class Client {
 
             serverListener.start();
 
+            PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
+
             // Ciclo principale per gestire i comandi dell'utente
             while (!quit[0]) {
                 // Aggiunta di una pausa di 2 secondi tra ogni iterazione
@@ -72,12 +74,9 @@ public class Client {
 
                 // Se il comando è "publish"
                 if (command.startsWith("publish ") && command.split(" ").length > 1) {
-                    if (serverListener.isAlive()) {
-                        serverListener.interrupt();
-                    }
 
-                    Socket publishSocket = new Socket(host, port);
-                    Thread publisher = new Thread(new Publisher(publishSocket, command.split(" ")[1]));
+                    // Socket publishSocket = new Socket(host, port);
+                    Thread publisher = new Thread(new Publisher(socket, command.split(" ")[1]));
                     activeThread[0] = publisher;
                     publisher.start();
 
@@ -90,12 +89,9 @@ public class Client {
                 }
                 // Se il comando è "subscribe"
                 else if (command.startsWith("subscribe ") && command.split(" ").length > 1) {
-                    if (serverListener.isAlive()) {
-                        serverListener.interrupt();
-                    }
 
-                    Socket subscribeSocket = new Socket(host, port);
-                    Thread subscriber = new Thread(new Subscriber(subscribeSocket, command.split(" ")[1]));
+                    // Socket subscribeSocket = new Socket(host, port);
+                    Thread subscriber = new Thread(new Subscriber(socket, command.split(" ")[1]));
                     activeThread[0] = subscriber;
                     subscriber.start();
 
@@ -108,24 +104,15 @@ public class Client {
                 }
                 // Se il comando è "show"
                 else if (command.equals("show")) {
-                    CountDownLatch latch = new CountDownLatch(1);
 
-                    Socket showSocket = new Socket(host, port);
-                    Thread showtopics = new Thread(new ShowTopics(showSocket, latch));
-                    showtopics.start();
+                    // PrintWriter per inviare la richiesta "show" al server
+                    toServer.println("show");
 
-                    try {
-                        showtopics.join();  // Attende la terminazione di showtopics
-                        latch.await();
-                    } catch (InterruptedException e) {
-                        return;
-                    }
                 }
                 // Se il comando è "quit"
                 else if (command.equals("quit")) {
                     // Invia al server il comando "quit"
                     if (!socket.isClosed()) {
-                        PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
                         toServer.println("quit");
                         System.out.println("Disconnessione dal server...");
                     }
