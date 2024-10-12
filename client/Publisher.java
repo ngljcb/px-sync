@@ -34,46 +34,16 @@ public class Publisher implements Runnable {
             // Invia il comando di "publish" al server con il nome del topic
             toServer.println("publish " + this.topic);
 
-            // Crea un thread separato per ascoltare i messaggi in arrivo dal server
-            Thread serverListener = new Thread(() -> {
-                try {
-                    // Scanner per ricevere i dati dal server
-                    Scanner fromServer = new Scanner(this.socket.getInputStream());
-                    
-                    // Continua a leggere messaggi dal server finché il publisher non termina
-                    while (!quiting) {
-                        
-                        // Legge il prossimo messaggio dal server
-                        String response = fromServer.nextLine();
-                        
-                        // Se il server invia il comando "quit", interrompe il ciclo
-                        if (response.equals("quit") || this.socket.isClosed()) {
-                            quiting = true;
-                            break;
-                        }
-                        System.out.println(response);
-                    }
-                    // Chiude il canale di comunicazione con il server
-                    fromServer.close();
-                } catch (Exception e) {
-                    // Gestione dell'eccezione se la connessione al server viene persa
-                    System.out.println("Connessione al server persa.");
-                    System.out.println("Comandi disponibili  >>  quit");
-                }
-            });
-
-            // Avvia il thread per ascoltare i messaggi dal server
-            serverListener.start();
-
             // Gestisce l'input dell'utente nel thread principale
             while (!quiting) {
                 // Aggiunta di un ritardo di 2 secondi tra ogni iterazione del ciclo
                 try {
-                    Thread.sleep(2000);  // Pausa di 2 secondi
+                    if(!Thread.currentThread().isInterrupted()) {
+                        Thread.sleep(2000);  // Pausa di 2 secondi
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
 
                 if (!socket.isClosed()) {
                     // Mostra all'utente come usare il client
@@ -111,9 +81,6 @@ public class Publisher implements Runnable {
                     System.out.println("Comando non riconosciuto. \n");
                 }
             }
-
-            // Attende la terminazione del thread che ascolta i messaggi dal server
-            serverListener.join();
 
             // Chiude le risorse utilizzate per la comunicazione
             toServer.close();

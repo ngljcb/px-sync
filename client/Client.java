@@ -2,7 +2,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 import java.io.PrintWriter;
-import java.util.concurrent.CountDownLatch;
 
 public class Client {
 
@@ -15,54 +14,57 @@ public class Client {
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
-        try {            
-            Scanner userInput = new Scanner(System.in);
-            
+        try {
             // Usa un array di dimensione 1 per tracciare lo stato di "quit"
             final boolean[] quit = {false};
             
             // Crea una connessione socket al server
             Socket socket = new Socket(host, port);
             System.out.println("Connesso al server");
-
+            
             // Variabili per tenere traccia dei thread attivi
             final Thread[] activeThread = {null};  // Tiene traccia del thread Publisher o Subscriber attivo
-
+            
             // Thread separato per ascoltare i messaggi dal server
             Thread serverListener = new Thread(() -> {
                 try {
                     Scanner fromServer = new Scanner(socket.getInputStream());
-
-                    while (!Thread.currentThread().isInterrupted() && !quit[0] && fromServer.hasNextLine()) {
+                    
+                    while (!Thread.currentThread().isInterrupted() || !quit[0] || fromServer.hasNextLine()) {
                         String response = fromServer.nextLine();
-
+                        
                         if (response.equals("quit") || socket.isClosed()) {
                             System.out.println("\nErrore: Il server si è disconnesso.");
                             System.out.println("Comandi disponibili  >>  quit");
-
+                            
                             // Interrompe eventuali thread attivi
                             if (activeThread[0] != null && activeThread[0].isAlive()) {
                                 activeThread[0].interrupt();
                             }
-
+                            
                             quit[0] = true;
                             break;
                         } else {
                             System.out.println(response);
                         }
                     }
-
+                    
                     fromServer.close();
                 } catch (IOException e) {
                     if (!Thread.currentThread().isInterrupted()) {
                         System.out.println("Connessione al server persa.");
                     }
+                } catch (Exception e) {
+                    // Gestione dell'eccezione se la connessione al server viene persa
+                    System.out.println("Connessione al server persa.");
+                    System.out.println("Comandi disponibili  >>  quit");
                 }
             });
-
+            
             serverListener.start();
-
+            
             PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true);
+            Scanner userInput = new Scanner(System.in);
 
             // Ciclo principale per gestire i comandi dell'utente
             while (!quit[0]) {
@@ -134,6 +136,7 @@ public class Client {
                     System.out.println("Comando sconosciuto");
                 }
             }
+            userInput.close();
 
             // Chiude il socket
             socket.close();
@@ -149,7 +152,6 @@ public class Client {
             }
 
             // Chiude le risorse
-            userInput.close();
             System.out.println("\n\n>> Client terminato.");
 
         } catch (IOException e) {
