@@ -6,7 +6,6 @@ import java.util.concurrent.CountDownLatch;
 public class TopicInspector implements Runnable {
 
     private TopicManager topicManager;  // Risorsa condivisa per gestire i topic
-    private CountDownLatch latch;       // Latch per sincronizzare con il thread principale
     private String topicName;
 
     /**
@@ -15,9 +14,8 @@ public class TopicInspector implements Runnable {
      * @param topicManager La risorsa condivisa TopicManager che gestisce i topic.
      * @param latch Il CountDownLatch per sincronizzare con il thread Server.
      */
-    public TopicInspector(TopicManager topicManager, CountDownLatch latch, String topicName) {
+    public TopicInspector(TopicManager topicManager, String topicName) {
         this.topicManager = topicManager;
-        this.latch = latch;
         this.topicName = topicName;
     }
 
@@ -29,16 +27,7 @@ public class TopicInspector implements Runnable {
     public void run() {
         Scanner scanner = new Scanner(System.in);
 
-        // System.out.println("\nInserisci il topic da ispezionare:");
-        // String topicName = scanner.nextLine();
-
         Optional<Topic> optionalTopic = topicManager.getTopicByName(topicName);
-
-        // if (optionalTopic.isEmpty()) {
-        //     System.out.println("Errore: Topic non trovato. \n");
-        //     latch.countDown();  // Riduce il conteggio del latch
-        //     return;
-        // }
 
         Topic topic = optionalTopic.get();
         boolean interactiveSession = true;
@@ -80,8 +69,5 @@ public class TopicInspector implements Runnable {
                 System.out.println("Comando sconosciuto.");
             }
         }
-
-        // Rilascia il latch per segnalare la fine del thread
-        latch.countDown();
     }
 }
