@@ -70,18 +70,15 @@ public class Server {
                     if (optionalTopic.isEmpty()) {
                         System.out.println("Errore: Topic non trovato. \n");
                     } else {
-                        
-                        CountDownLatch latch = new CountDownLatch(1);
-    
+                            
                         // Prima di eseguire l'ispezione, segnala a tutti i ClientHandler che l'ispezione è in corso
                         socketListener.setInspectorRunningForAllClients(topicName);
     
-                        Thread topicInspector = new Thread(new TopicInspector(topicManager, latch, topicName));
+                        Thread topicInspector = new Thread(new TopicInspector(topicManager, topicName));
                         topicInspector.start();
     
                         try {
                             // Attende che TopicInspector completi il suo lavoro
-                            latch.await();
                             topicInspector.join();
                         } catch (InterruptedException e) {
                             return;
