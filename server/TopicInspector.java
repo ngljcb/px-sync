@@ -1,7 +1,6 @@
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.concurrent.CountDownLatch;
 
 public class TopicInspector implements Runnable {
 
@@ -12,7 +11,7 @@ public class TopicInspector implements Runnable {
      * Costruttore della classe TopicInspector.
      * 
      * @param topicManager La risorsa condivisa TopicManager che gestisce i topic.
-     * @param latch Il CountDownLatch per sincronizzare con il thread Server.
+     * @param topicName Topic da ispezionare.
      */
     public TopicInspector(TopicManager topicManager, String topicName) {
         this.topicManager = topicManager;
