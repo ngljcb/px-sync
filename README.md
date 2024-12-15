@@ -1,6 +1,6 @@
 # Publish/Subscribe Messaging System
 
-<a href="#"><img src="./assets/pub-sub.png"></a>
+<a href="#"><img src="./publish-subscribe/assets/pub-sub.png"></a>
 
 **Summary**  
 This project implements a publish/subscribe messaging system using Java sockets, following a client-server architecture. Multiple clients can connect to a central server to interact as either publishers or subscribers. Publishers send messages to specific topics, while subscribers receive messages from the topics they are subscribed to. The server manages topics, clients, and ensures proper message flow with a focus on concurrency and synchronization.
@@ -55,7 +55,7 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    Example:
 
-   <a href="#"><img src="./assets/01-server-launch.gif"></a>
+   <a href="#"><img src="./publish-subscribe/assets/01-server-launch.gif"></a>
 
    ```bash
    java Server 9018
@@ -70,7 +70,7 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    Example:
 
-   <a href="#"><img src="./assets/02-client-launch.gif"></a>
+   <a href="#"><img src="./publish-subscribe/assets/02-client-launch.gif"></a>
 
    ```bash
    java Client localhost 9018
@@ -81,15 +81,15 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    - `publish <topic>`: Publish messages to a specific topic.
 
-     <a href="#"><img src="./assets/03-publish-topic.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/03-publish-topic.gif"></a>
 
    - `subscribe <topic>`: Subscribe to a topic to receive updates.
 
-     <a href="#"><img src="./assets/05-subscribe-topic.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/05-subscribe-topic.gif"></a>
 
    - `show`: Request a list of available topics from the server.
 
-     <a href="#"><img src="./assets/06-show-topic.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/06-show-topic.gif"></a>
 
    - `quit`: Disconnect from the server.
 
@@ -98,15 +98,15 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    - `send <message>`: After choosing a topic, publish a message to it.
 
-     <a href="#"><img src="./assets/04-send-topic.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/04-send-topic.gif"></a>
 
    - `list`: List messages you’ve published to a topic.
 
-     <a href="#"><img src="./assets/07-publisher-list.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/07-publisher-list.gif"></a>
 
    - `listall`: List all messages in a topic.
 
-     <a href="#"><img src="./assets/08-publisher-listall.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/08-publisher-listall.gif"></a>
 
    - `quit`: Disconnect from the server.
 
@@ -115,7 +115,7 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    - `listall`: List all messages in a topic.
 
-     <a href="#"><img src="./assets/09-subscriber-listall.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/09-subscriber-listall.gif"></a>
 
    - `quit`: Disconnect from the server.
 
@@ -124,11 +124,11 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    - `show`: Displays all available topics.
 
-     <a href="#"><img src="./assets/10-server-show.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/10-server-show.gif"></a>
 
    - `inspect`: Inspect messages in a specific topic.
 
-     <a href="#"><img src="./assets/11-server-inspect.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/11-server-inspect.gif"></a>
 
    - `quit`: Shuts down the server gracefully.
 
@@ -137,11 +137,11 @@ The system uses advanced concurrency programming techniques to handle multiple c
 
    - `:listall`: Displays all available messages in a specific topic.
 
-     <a href="#"><img src="./assets/12-server-listall.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/12-server-listall.gif"></a>
 
    - `:delete <id>`: Eliminates a specific message of a given id.
 
-     <a href="#"><img src="./assets/13-server-delete.gif"></a>
+     <a href="#"><img src="./publish-subscribe/assets/13-server-delete.gif"></a>
 
    - `:end`: To end the interactive inspect on console.
 
